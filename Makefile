@@ -1,9 +1,9 @@
 .PHONY: dep build
 
-# REPO_INFO is the URL of git repository.
-REPO_INFO ?= $(shell git config --get remote.origin.url)
+REPO_NAME=hack
+PKGROOT=github.com/Ladicle/hack
 
-# VERSION is the git commit hash prefixed with "git-".
+# VERSION is the git commit hash.
 VERSION ?= $(shell git rev-parse --short HEAD)
 
 UNAME_S := $(shell uname -s)
@@ -23,14 +23,17 @@ OUTDIR=_output
 dep:
 	dep ensure -update
 
+clean:
+	rm -r $(OUTDIR)
+
 build:
-	CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "-w -X main/cmd.version=$(VERSION) -X main.gitRepo=$(REPO_INFO)" -o $(OUTDIR)/hack
+	CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack
 
 build_darwin64:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-w -X main/cmd.version=$(VERSION) -X main.gitRepo=$(REPO_INFO)" -o $(OUTDIR)/hack_darwin64
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack_darwin64
 
 build_linux64:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -X main.version=$(VERSION) -X main.gitRepo=$(REPO_INFO)" -o $(OUTDIR)/hack_linux64
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack_linux64
 
 install:
-	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) go install -ldflags "-w -X main.version=$(VERSION) -X main.gitRepo=$(REPO_INFO)"
+	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) go install -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)"

@@ -4,12 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
-)
 
-var (
-	// These variables are set at the build time.
-	version string
-	gitRepo string
+	"github.com/Ladicle/hack/cmd"
 )
 
 func main() {
@@ -32,15 +28,10 @@ Commands:
 		os.Exit(1)
 	}
 
-	switch flag.Arg(0) {
-	case "atcoder":
-		fmt.Fprintln(ioErr, "Not implemented")
-		os.Exit(1)
-	case "version":
-		fmt.Fprintf(io, "%v version is %v", gitRepo, version)
-		os.Exit(0)
-	default:
-		fmt.Fprintln(ioErr, "Unknown command")
+	os.Args = flag.Args()
+	cmd.LoadCmd(io)
+	if err := cmd.HandleCmd(flag.Arg(0)); err != nil {
+		fmt.Fprintln(ioErr, err)
 		os.Exit(1)
 	}
 }
