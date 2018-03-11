@@ -1,3 +1,3 @@
-# Competition
+# Hack
 
-`competition` is CLI tool to support programming competitions.
+`hack` is CLI tool to support programming competitions.
