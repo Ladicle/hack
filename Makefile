@@ -4,7 +4,7 @@
 REPO_INFO ?= $(shell git config --get remote.origin.url)
 
 # VERSION is the git commit hash prefixed with "git-".
-VERSION ?= git-$(shell git rev-parse --short HEAD)
+VERSION ?= $(shell git rev-parse --short HEAD)
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
