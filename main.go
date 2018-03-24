@@ -17,9 +17,8 @@ func main() {
 Options:
   -h --help      Show this help message
 
-Commands:
-  atcoder        Support AtCoder contests
-  version        Show this command version`)
+Commands:`)
+		cmd.PrintUsage(io)
 	}
 
 	flag.Parse()

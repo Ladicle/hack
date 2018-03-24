@@ -33,3 +33,11 @@ func HandleCmd(name string) error {
 	}
 	return fmt.Errorf("%v is unknown command", name)
 }
+
+// PrintUsage write command usage to specified writer
+func PrintUsage(io io.Writer) {
+	for _, c := range cmds {
+		space := strings.Repeat(" ", 20-len(c.Name))
+		fmt.Fprintf(io, "  %s%s%s\n", c.Name, space, c.Description)
+	}
+}
