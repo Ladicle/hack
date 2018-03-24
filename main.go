@@ -10,12 +10,21 @@ import (
 
 func main() {
 	io, ioErr := os.Stdout, os.Stderr
+	cmd.LoadCmd(io)
+
+	flag.StringVar(&cmd.ConfigPath, "config", "", "")
+	flag.StringVar(&cmd.ConfigPath, "c", "", "")
+
+	flag.StringVar(&cmd.OutputDirectory, "output", "", "")
+	flag.StringVar(&cmd.OutputDirectory, "o", "", "")
 
 	flag.Usage = func() {
 		fmt.Fprintln(io, `Usage: hack [OPTIONS] COMMAND
 
 Options:
-  -h --help      Show this help message
+  -c --config         Configuration path (default: ~/.hack)
+  -o --output         Output directory (default: ~/competition)
+  -h --help           Show this help message
 
 Commands:`)
 		cmd.PrintUsage(io)
@@ -28,7 +37,6 @@ Commands:`)
 	}
 
 	os.Args = flag.Args()
-	cmd.LoadCmd(io)
 	if err := cmd.HandleCmd(flag.Arg(0)); err != nil {
 		fmt.Fprintln(ioErr, err)
 		os.Exit(1)

@@ -3,6 +3,12 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"strings"
+)
+
+var (
+	ConfigPath      string
+	OutputDirectory string
 )
 
 // Command run command.
