@@ -14,6 +14,7 @@ var (
 // Command run command.
 type Command struct {
 	Name        string
+	Short       string
 	Description string
 	Run         func() error
 }
