@@ -44,7 +44,7 @@ func HandleCmd(name string) error {
 // PrintUsage write command usage to specified writer
 func PrintUsage(io io.Writer) {
 	for _, c := range cmds {
-		space := strings.Repeat(" ", 20-len(c.Name))
-		fmt.Fprintf(io, "  %s%s%s\n", c.Name, space, c.Description)
+		space := strings.Repeat(" ", 20-len(c.Short))
+		fmt.Fprintf(io, "  %s%s%s\n", c.Short, space, c.Description)
 	}
 }

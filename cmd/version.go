@@ -15,6 +15,7 @@ var (
 func NewVersionCmd(io io.Writer) Command {
 	return Command{
 		Name:        "version",
+		Short:       "version",
 		Description: "Show this command version",
 		Run: func() error {
 			fmt.Fprintf(io, "%v version is %v", gitRepo, version)
