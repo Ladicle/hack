@@ -24,7 +24,6 @@ var cmds []Command
 // LoadCmd loads all cmds.
 func LoadCmd(io io.Writer) {
 	addCmd(NewVersionCmd(io))
-	addCmd(NewAtCorderCmd(io))
 }
 
 func addCmd(c Command) {
