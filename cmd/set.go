@@ -1,7 +1,13 @@
 package cmd
 
 import (
+	"flag"
+	"fmt"
 	"io"
+	"strings"
+
+	"github.com/Ladicle/hack/pkg/config"
+	"github.com/Ladicle/hack/pkg/contest"
 )
 
 // NewSetCmd sets contest information.
@@ -20,5 +26,22 @@ type setCmd struct {
 }
 
 func (c *setCmd) run() error {
-	return nil
+	flag.Parse()
+	if flag.NArg() >= 2 {
+		return fmt.Errorf("invalid number of arguments")
+	}
+
+	contest.LoadContest()
+
+	path := strings.Split(flag.Arg(0), "/")
+	ctt, err := contest.GetContest(path[0])
+	if err != nil {
+		return err
+	}
+
+	if err := ctt.Set(OutputDirectory, path[1:]); err != nil {
+		return err
+	}
+
+	return config.WriteConfig(ConfigPath)
 }

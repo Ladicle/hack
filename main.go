@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Ladicle/hack/cmd"
+	"github.com/Ladicle/hack/pkg/config"
 )
 
 func main() {
@@ -34,6 +35,10 @@ Commands:`)
 	if flag.NArg() == 0 {
 		fmt.Fprintln(ioErr, "Invalid number of arguments")
 		os.Exit(1)
+	}
+
+	if err := config.LoadConfig(cmd.ConfigPath); err != nil {
+		fmt.Fprintf(ioErr, "Filed to load configuration from %v\n", cmd.ConfigPath)
 	}
 
 	os.Args = flag.Args()
