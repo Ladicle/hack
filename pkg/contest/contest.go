@@ -21,6 +21,9 @@ func addContest(c Contest) {
 
 // GetContest returns matched contest instance
 func GetContest(name string) (*Contest, error) {
+	if name == "" {
+		return nil, fmt.Errorf("contest name is required argument")
+	}
 	for _, c := range contests {
 		if c.Name == name {
 			return &c, nil
