@@ -27,6 +27,7 @@ func LoadCmd(io io.Writer) {
 	addCmd(NewSetCmd(io))
 	addCmd(NewInfoCmd(io))
 	addCmd(NewOpenCmd(io))
+	addCmd(NewJumpCmd(io))
 }
 
 func addCmd(c Command) {
