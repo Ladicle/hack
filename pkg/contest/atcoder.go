@@ -2,7 +2,6 @@ package contest
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -65,14 +64,6 @@ func (a *atCorder) set(output string, arg []string) error {
 	return nil
 }
 
-func mkdirs(baseDir string, dirNames []string) error {
-	for _, n := range dirNames {
-		if err := os.MkdirAll(filepath.Join(baseDir, n), 0755); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func generateURL(ctype, number string) string {
 	return fmt.Sprintf("https://%s%s.contest.atcoder.jp/", ctype, number)
