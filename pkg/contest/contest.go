@@ -13,6 +13,7 @@ var contests []Contest
 // LoadContest loads all contests.
 func LoadContest() {
 	addContest(NewAtCorderContest())
+	addContest(NewCodeJamContest())
 }
 
 func addContest(c Contest) {

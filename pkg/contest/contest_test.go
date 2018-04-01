@@ -12,6 +12,9 @@ func TestGetContest(t *testing.T) {
 			name: "atcoder",
 		},
 		{
+			name: "codejam",
+		},
+		{
 			name: "hoge",
 			err:  true,
 		},
