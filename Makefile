@@ -37,3 +37,6 @@ build_linux64:
 
 install:
 	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) go install -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)"
+
+check:
+	go test $(PKGROOT)/...
