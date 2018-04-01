@@ -36,12 +36,13 @@ func (c *setCmd) run() error {
 	path := strings.Split(flag.Arg(0), "/")
 	ctt, err := contest.GetContest(path[0])
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get a contest: %v", err)
 	}
 
 	if err := ctt.Set(OutputDirectory, path[1:]); err != nil {
-		return err
+		return fmt.Errorf("failed to set a contest: %v", err)
 	}
+	fmt.Fprintf(c.IO, "Created contest directories to %s\n", OutputDirectory)
 
 	return config.WriteConfig(ConfigPath)
 }
