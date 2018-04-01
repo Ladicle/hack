@@ -40,7 +40,7 @@ func HandleCmd(name string) error {
 			return c.Run()
 		}
 	}
-	return fmt.Errorf("%v is unknown command", name)
+	return fmt.Errorf("%q is unknown command", name)
 }
 
 // PrintUsage write command usage to specified writer
