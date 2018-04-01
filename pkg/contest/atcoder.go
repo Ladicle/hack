@@ -35,13 +35,14 @@ func (a *atCorder) set(output string, arg []string) error {
 	}
 
 	t := arg[0]
-	n, err := strconv.Atoi(arg[1])
+	in, err := strconv.Atoi(arg[1])
 	if err != nil {
 		return fmt.Errorf("%v is invalid <number> argument", arg[1])
 	}
+	n := fmt.Sprintf("%03d", in)
 
 	var quizzes []string
-	baseDir := filepath.Join(output, a.Name, t, arg[1])
+	baseDir := filepath.Join(output, a.Name, t, n)
 	switch t {
 	case typeABC:
 		quizzes = strings.Split("abcd", "")
@@ -73,6 +74,6 @@ func mkdirs(baseDir string, dirNames []string) error {
 	return nil
 }
 
-func generateURL(ctype string, number int) string {
-	return fmt.Sprintf("https://%s%03d.contest.atcoder.jp/", ctype, number)
+func generateURL(ctype, number string) string {
+	return fmt.Sprintf("https://%s%s.contest.atcoder.jp/", ctype, number)
 }
