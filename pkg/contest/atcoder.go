@@ -57,14 +57,13 @@ func (a *atCorder) set(output string, arg []string) error {
 	config.C.CurrentQuizz = quizzes[0]
 	config.C.Contest = config.Contest{
 		Name:    a.Name,
-		URL:     generateURL(t, n),
+		URL:     generateAtCorderURL(t, n),
 		Path:    baseDir,
 		Quizzes: quizzes,
 	}
 	return nil
 }
 
-
-func generateURL(ctype, number string) string {
+func generateAtCorderURL(ctype, number string) string {
 	return fmt.Sprintf("https://%s%s.contest.atcoder.jp/", ctype, number)
 }
