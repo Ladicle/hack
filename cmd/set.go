@@ -15,7 +15,7 @@ func NewSetCmd(io io.Writer) Command {
 	s := setCmd{IO: io}
 	return Command{
 		Name:        "set",
-		Short:       "set PATH",
+		Short:       "set <PATH>",
 		Description: "Set contest information",
 		Run:         s.run,
 	}
