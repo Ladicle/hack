@@ -29,5 +29,5 @@ func WriteConfig(path string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, y, 0)
+	return ioutil.WriteFile(path, y, 0755)
 }
