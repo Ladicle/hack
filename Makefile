@@ -1,4 +1,4 @@
-.PHONY: dep build
+.PHONY: dep build install clean check
 
 REPO_NAME=hack
 PKGROOT=github.com/Ladicle/hack
