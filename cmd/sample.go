@@ -18,7 +18,7 @@ func NewSampleCmd(io io.Writer) Command {
 	s := sampleCmd{IO: io}
 	return Command{
 		Name:        "sample",
-		Short:       "sample [NUMBER]",
+		Short:       "sample [-i] [NUMBER]",
 		Description: "Sample creates input/output sample",
 		Run:         s.run,
 	}
@@ -30,8 +30,11 @@ type sampleCmd struct {
 
 func (c *sampleCmd) run() error {
 	var start int
+	var interactive bool
 
+	flag.BoolVar(&interactive, "i", false, "Tell you an answer if you continue input samples.")
 	flag.Parse()
+
 	switch flag.NArg() {
 	case 0:
 		start = 1
@@ -68,6 +71,10 @@ func (c *sampleCmd) run() error {
 		fmt.Fprintf(c.IO, "Input sample output for %q:\n", outSample)
 		if err := readAndCreateFile(genQuizDir(outSample)); err != nil {
 			return err
+		}
+
+		if !interactive {
+			continue
 		}
 
 		if yes, err := ansIsY("Continue to create sample?", c.IO); err != nil {
