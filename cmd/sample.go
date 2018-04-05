@@ -32,7 +32,7 @@ func (c *sampleCmd) run() error {
 	var start int
 	var interactive bool
 
-	flag.BoolVar(&interactive, "i", false, "Tell you an answer if you continue input samples.")
+	flag.BoolVar(&interactive, "i", false, "Tell you an answer if you continue input samples. (default: false)")
 	flag.Parse()
 
 	switch flag.NArg() {
