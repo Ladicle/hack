@@ -124,7 +124,7 @@ func readAndCreateFile(path string) error {
 		if strings.TrimSpace(s) == "" {
 			break
 		}
-		if _, err = out.WriteString(s); err != nil {
+		if _, err = out.WriteString(fmt.Sprintf("%s\n", s)); err != nil {
 			return err
 		}
 	}
