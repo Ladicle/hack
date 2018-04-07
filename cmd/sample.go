@@ -90,7 +90,7 @@ func genQuizDir(name string) string {
 	return filepath.Join(
 		config.C.Contest.Path,
 		config.C.CurrentQuizz,
-		fmt.Sprintf("%v.out", name))
+		name)
 }
 
 func ansIsY(msg string, io io.Writer) (bool, error) {
