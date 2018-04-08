@@ -106,7 +106,7 @@ func ansIsY(msg string, io io.Writer) (bool, error) {
 }
 
 func readAndCreateFile(path string) error {
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0755)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		fmt.Errorf("failed to open file %q: %v", path, err)
 	}
