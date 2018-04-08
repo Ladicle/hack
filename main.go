@@ -61,7 +61,7 @@ Commands:\n`, defaultConfigPath, defaultOutputDirectory)
 	}
 
 	os.Args = flag.Args()
-	if err := cmd.HandleCmd(flag.Arg(0)); err != nil {
+	if err := cmd.HandleCmd(flag.Arg(0), flag.Args(), cmd.Option{}); err != nil {
 		fmt.Fprintln(ioErr, err)
 		os.Exit(1)
 	}

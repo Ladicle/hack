@@ -24,7 +24,7 @@ type infoCmd struct {
 	IO io.Writer
 }
 
-func (c *infoCmd) run() error {
+func (c *infoCmd) run(args []string, opt Option) error {
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return fmt.Errorf("invalid number of arguments")

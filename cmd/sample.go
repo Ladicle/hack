@@ -28,7 +28,7 @@ type sampleCmd struct {
 	IO io.Writer
 }
 
-func (c *sampleCmd) run() error {
+func (c *sampleCmd) run(args []string, opt Option) error {
 	var start int
 	var interactive bool
 

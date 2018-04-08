@@ -24,7 +24,7 @@ type openCmd struct {
 	IO io.Writer
 }
 
-func (c *openCmd) run() error {
+func (c *openCmd) run(args []string, opt Option) error {
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return fmt.Errorf("invalid number of arguments")

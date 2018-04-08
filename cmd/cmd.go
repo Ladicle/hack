@@ -11,12 +11,16 @@ var (
 	OutputDirectory string
 )
 
+// Option manages global command options.
+type Option struct {
+}
+
 // Command run command.
 type Command struct {
 	Name        string
 	Short       string
 	Description string
-	Run         func() error
+	Run         func(args []string, opt Option) error
 }
 
 var cmds []Command
@@ -36,10 +40,10 @@ func addCmd(c Command) {
 }
 
 // HandleCmd dispatches and execute specified command.
-func HandleCmd(name string) error {
+func HandleCmd(name string, args []string, opt Option) error {
 	for _, c := range cmds {
 		if name == c.Name {
-			return c.Run()
+			return c.Run(args, opt)
 		}
 	}
 	return fmt.Errorf("%q is unknown command", name)

@@ -25,7 +25,7 @@ type setCmd struct {
 	IO io.Writer
 }
 
-func (c *setCmd) run() error {
+func (c *setCmd) run(args []string, opt Option) error {
 	flag.Parse()
 	if flag.NArg() >= 2 {
 		return fmt.Errorf("invalid number of arguments")

@@ -24,7 +24,7 @@ type jumpCmd struct {
 	IO io.Writer
 }
 
-func (c *jumpCmd) run() error {
+func (c *jumpCmd) run(args []string, opt Option) error {
 	var quiz string
 
 	flag.Parse()
