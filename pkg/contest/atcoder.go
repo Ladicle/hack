@@ -54,7 +54,6 @@ func (a *atCorder) set(output string, arg []string) error {
 	}
 	mkdirs(baseDir, quizzes)
 
-	config.C.CurrentQuizz = quizzes[0]
 	config.C.Contest = config.Contest{
 		Name:    a.Name,
 		URL:     generateAtCorderURL(t, n),

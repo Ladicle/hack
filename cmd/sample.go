@@ -64,6 +64,10 @@ func (c *sampleCmd) run() error {
 			return fmt.Errorf("unexpected error occurred: %v", err)
 		}
 
+		if config.C.CurrentQuizz == "" {
+			return fmt.Errorf("could not get a current quiz: please set a current quiz (ex. hack jump)")
+		}
+
 		fmt.Fprintf(c.IO, "%v:\n", inSample)
 		if err := readAndCreateFile(genQuizDir(inSample)); err != nil {
 			return err

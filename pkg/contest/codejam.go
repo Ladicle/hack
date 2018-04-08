@@ -31,7 +31,6 @@ func (a *codeJam) set(output string, arg []string) error {
 	baseDir := filepath.Join(output, a.Name, year, round)
 	mkdirs(baseDir, quizzes)
 
-	config.C.CurrentQuizz = quizzes[0]
 	config.C.Contest = config.Contest{
 		Name:    a.Name,
 		URL:     generateCodeJamURL(year),
