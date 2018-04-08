@@ -57,18 +57,19 @@ func (c *sampleCmd) run() error {
 			if yes, err := ansIsY(msg, c.IO); err != nil {
 				return err
 			} else if yes {
+				fmt.Fprintln(c.IO)
 				continue
 			}
 		} else if err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("unexpected error occurred: %v", err)
 		}
 
-		fmt.Fprintf(c.IO, "Input sample input for %q:\n", inSample)
+		fmt.Fprintf(c.IO, "%v:\n", inSample)
 		if err := readAndCreateFile(genQuizDir(inSample)); err != nil {
 			return err
 		}
 
-		fmt.Fprintf(c.IO, "Input sample output for %q:\n", outSample)
+		fmt.Fprintf(c.IO, "%v:\n", outSample)
 		if err := readAndCreateFile(genQuizDir(outSample)); err != nil {
 			return err
 		}
