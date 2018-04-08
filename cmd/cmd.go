@@ -13,6 +13,7 @@ var (
 
 // Option manages global command options.
 type Option struct {
+	WorkDir string
 }
 
 // Command run command.

@@ -68,6 +68,7 @@ a sample input/output files for testing. `sample` command
 supports such action as follows.
 
 ```
+$ cd (hack jump)
 $ hack sample
 "1.in" is already exists. Skip it? (y/n): n
 

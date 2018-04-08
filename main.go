@@ -60,8 +60,15 @@ Commands:\n`, defaultConfigPath, defaultOutputDirectory)
 		fmt.Fprintf(ioErr, "Filed to load configuration from %v\n", cmd.ConfigPath)
 	}
 
+	workDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		fmt.Fprintf(ioErr, "Filed to get current working directory.: %v\n", err)
+		os.Exit(1)
+	}
+	opt := cmd.Option{WorkDir: workDir}
+
 	os.Args = flag.Args()
-	if err := cmd.HandleCmd(flag.Arg(0), flag.Args(), cmd.Option{}); err != nil {
+	if err := cmd.HandleCmd(flag.Arg(0), flag.Args(), opt); err != nil {
 		fmt.Fprintln(ioErr, err)
 		os.Exit(1)
 	}

@@ -31,7 +31,16 @@ func (c *jumpCmd) run(args []string, opt Option) error {
 	switch flag.NArg() {
 	case 0:
 		current := config.C.CurrentQuizz
-		quiz = nextQuiz(current, config.C.Contest.Quizzes)
+		if current == "" {
+			current = config.C.Contest.Quizzes[0]
+		}
+
+		if opt.WorkDir != filepath.Join(config.C.Contest.Path, current) {
+			quiz = current
+		} else {
+			quiz = nextQuiz(current, config.C.Contest.Quizzes)
+		}
+
 		if quiz == "" {
 			return fmt.Errorf("%q is a last quiz, so has not a next quiz", current)
 		}
