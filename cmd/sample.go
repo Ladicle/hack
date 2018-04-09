@@ -37,7 +37,7 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 
 	switch flag.NArg() {
 	case 0:
-		start = 1
+		start = nextSampleNum()
 	case 1:
 		if i, err := strconv.Atoi(flag.Arg(0)); err != nil {
 			fmt.Errorf("%q is not number", flag.Arg(0))
@@ -91,7 +91,15 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 	return nil
 }
 
-func genQuizDir(name string) string {
+func nextSampleNum() int {
+	for i := 1; ; i++ {
+		path := genPathInQuizDir(fmt.Sprintf("%d.in", i))
+		if _, err := os.Stat(path); err == os.ErrNotExist {
+			return i
+		}
+	}
+}
+
 func genPathInQuizDir(name string) string {
 	return filepath.Join(
 		config.C.Contest.Path,
