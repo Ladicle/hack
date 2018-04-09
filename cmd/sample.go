@@ -69,12 +69,12 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 		}
 
 		fmt.Fprintf(c.IO, "%v:\n", inSample)
-		if err := readAndCreateFile(genQuizDir(inSample)); err != nil {
+		if err := readAndCreateFile(genPathInQuizDir(inSample)); err != nil {
 			return err
 		}
 
 		fmt.Fprintf(c.IO, "%v:\n", outSample)
-		if err := readAndCreateFile(genQuizDir(outSample)); err != nil {
+		if err := readAndCreateFile(genPathInQuizDir(outSample)); err != nil {
 			return err
 		}
 
@@ -92,6 +92,7 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 }
 
 func genQuizDir(name string) string {
+func genPathInQuizDir(name string) string {
 	return filepath.Join(
 		config.C.Contest.Path,
 		config.C.CurrentQuizz,
