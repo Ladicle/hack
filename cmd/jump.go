@@ -31,16 +31,11 @@ func (c *jumpCmd) run(args []string, opt Option) error {
 	switch flag.NArg() {
 	case 0:
 		current := config.C.CurrentQuizz
-		if current == "" {
-			current = config.C.Contest.Quizzes[0]
-		}
-
 		if opt.WorkDir != filepath.Join(config.C.Contest.Path, current) {
 			quiz = current
 		} else {
 			quiz = nextQuiz(current, config.C.Contest.Quizzes)
 		}
-
 		if quiz == "" {
 			return fmt.Errorf("%q is a last quiz, so has not a next quiz", current)
 		}
@@ -73,6 +68,9 @@ func hasQuiz(quiz string, list []string) bool {
 }
 
 func nextQuiz(current string, list []string) string {
+	if current == "" {
+		return list[0]
+	}
 	var flag bool
 	for _, q := range list {
 		if flag {
@@ -82,5 +80,5 @@ func nextQuiz(current string, list []string) string {
 			flag = true
 		}
 	}
-	return ""
+	return list[len(list)-1]
 }
