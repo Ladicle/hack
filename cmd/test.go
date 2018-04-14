@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/logrusorgru/aurora"
 )
 
 // NewTestCmd tests contest testrmation.
@@ -52,15 +54,25 @@ func (c *testCmd) run(args []string, opt Option) error {
 		path = filepath.Join(opt.WorkDir, fmt.Sprintf("%v.out", s))
 		sampleOut, err := ioutil.ReadFile(path)
 		if err != nil {
+			fmt.Fprintln(c.IO, sampleOut)
 			return err
 		}
 
 		got := strings.TrimSuffix(string(out), "\n")
 		want := strings.TrimSuffix(string(sampleOut), "\n")
 		if got == want {
-			fmt.Printf("AC: sample %v\n", s)
+			fmt.Fprintf(c.IO, "[%v] input #%v\n", aurora.Green("AC"), s)
 		} else {
-			fmt.Printf("WA: sample %v got=%v, want=%v\n", s, got, want)
+			fmt.Fprintf(c.IO, "[%v] input #%v\n", aurora.Red("WA"), s)
+			gotL := strings.Split(got, "\n")
+			wantL := strings.Split(want, "\n")
+			for i, g := range gotL {
+				if g == wantL[i] {
+					fmt.Fprintln(c.IO, g)
+				} else {
+					fmt.Fprintf(c.IO, "%v\n%v\n", aurora.Red(g), aurora.Green(wantL[i]))
+				}
+			}
 		}
 	}
 	return nil

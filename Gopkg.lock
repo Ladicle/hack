@@ -9,6 +9,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/logrusorgru/aurora"
+  packages = ["."]
+  revision = "ca24023cc0175fdf372518cb1c5062cc86db2634"
+
+[[projects]]
+  branch = "master"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
   revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
@@ -28,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "86ade7376ae61823d7890070db3291312ab15bd305d293e82d941fe7f5edf194"
+  inputs-digest = "132ca22b11eea0db25a7d5854453a050d83c7e5b61d364dfa29581c0f98e4f2b"
   solver-name = "gps-cdcl"
   solver-version = 1
