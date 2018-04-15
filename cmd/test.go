@@ -45,47 +45,82 @@ func (c *testCmd) run(args []string, opt Option) error {
 	}
 
 	for _, s := range samples {
-		path := filepath.Join(opt.WorkDir, fmt.Sprintf("%v.in", s))
-		out, err := runGoFile(path)
+		inPath := filepath.Join(opt.WorkDir, fmt.Sprintf("%v.in", s))
+		out, err := runGoFile(inPath, false)
 		if err != nil {
+			fmt.Fprintln(c.IO, string(out))
 			return err
 		}
 
-		path = filepath.Join(opt.WorkDir, fmt.Sprintf("%v.out", s))
-		sampleOut, err := ioutil.ReadFile(path)
+		outPath := filepath.Join(opt.WorkDir, fmt.Sprintf("%v.out", s))
+		sampleOut, err := ioutil.ReadFile(outPath)
 		if err != nil {
-			fmt.Fprintln(c.IO, sampleOut)
 			return err
 		}
 
 		got := strings.TrimSuffix(string(out), "\n")
 		want := strings.TrimSuffix(string(sampleOut), "\n")
 		if got == want {
-			fmt.Fprintf(c.IO, "[%v] input #%v\n", aurora.Green("AC"), s)
+			c.printResutl(true, s)
+			continue
+		}
+
+		c.printResutl(false, s)
+		c.showOutputDiff(got, want)
+
+		if out, err := runGoFile(inPath, true); err != nil {
+			return err
 		} else {
-			fmt.Fprintf(c.IO, "[%v] input #%v\n", aurora.Red("WA"), s)
-			gotL := strings.Split(got, "\n")
-			wantL := strings.Split(want, "\n")
-			for i, g := range gotL {
-				if g == wantL[i] {
-					fmt.Fprintln(c.IO, g)
-				} else {
-					fmt.Fprintf(c.IO, "%v\n%v\n", aurora.Red(g), aurora.Green(wantL[i]))
-				}
-			}
+			fmt.Fprintln(c.IO, "# debug")
+			fmt.Fprintln(c.IO, string(out))
 		}
 	}
 	return nil
 }
 
-func runGoFile(path string) ([]byte, error) {
+func (c *testCmd) showOutputDiff(got, want string) {
+	gotL := strings.Split(got, "\n")
+	wantL := strings.Split(want, "\n")
+	gn := len(gotL)
+
+	for i, w := range wantL {
+		if i >= gn {
+			c.prettyPrintDiff("<empty>", w)
+			continue
+		}
+		if w == gotL[i] {
+			fmt.Fprintln(c.IO, w)
+		} else {
+			c.prettyPrintDiff(gotL[i], w)
+		}
+	}
+}
+
+func (c *testCmd) prettyPrintDiff(got, want string) {
+	fmt.Fprintf(c.IO, "%v\n%v\n", aurora.Red(got), aurora.Green(want))
+}
+
+func (c *testCmd) printResutl(result bool, id string) {
+	state := aurora.Green("AC")
+	if !result {
+		state = aurora.Red("WA")
+	}
+	fmt.Fprintf(c.IO, "[%v] input #%v\n", state, id)
+}
+
+func runGoFile(path string, debug bool) ([]byte, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	cmd := exec.Command("go", "run", "main.go")
+	var cmd *exec.Cmd
+	if debug {
+		cmd = exec.Command("go", "run", "main.go", "--debug")
+	} else {
+		cmd = exec.Command("go", "run", "main.go")
+	}
 	cmd.Stdin = f
 	return cmd.Output()
 }
