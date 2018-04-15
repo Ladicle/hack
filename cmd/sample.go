@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -35,6 +36,10 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 	flag.BoolVar(&interactive, "i", false, "Tell you an answer if you continue input samples. (default: false)")
 	flag.Parse()
 
+	if config.C.CurrentQuizz == "" {
+		return fmt.Errorf("could not get a current quiz: please set a current quiz (ex. hack jump)")
+	}
+
 	switch flag.NArg() {
 	case 0:
 		start = nextSampleNum()
@@ -64,10 +69,6 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 			return fmt.Errorf("unexpected error occurred: %v", err)
 		}
 
-		if config.C.CurrentQuizz == "" {
-			return fmt.Errorf("could not get a current quiz: please set a current quiz (ex. hack jump)")
-		}
-
 		fmt.Fprintf(c.IO, "%v:\n", inSample)
 		if err := readAndCreateFile(genPathInQuizDir(inSample)); err != nil {
 			return err
@@ -92,19 +93,35 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 }
 
 func nextSampleNum() int {
-	for i := 1; ; i++ {
-		path := genPathInQuizDir(fmt.Sprintf("%d.in", i))
-		if _, err := os.Stat(path); err == os.ErrNotExist {
-			return i
+	fs, err := ioutil.ReadDir(genQuizDir())
+	if err != nil {
+		return 1
+	}
+	var flag bool
+	for _, f := range fs {
+		n := strings.Split(f.Name(), ".")
+		if len(n) < 2 {
+			continue
+		}
+		if n[1] == "in" {
+			if flag {
+				i, _ := strconv.Atoi(n[0])
+				return i
+			}
+			flag = true
 		}
 	}
+	return 1
+}
+
+func genQuizDir() string {
+	return filepath.Join(
+		config.C.Contest.Path,
+		config.C.CurrentQuizz)
 }
 
 func genPathInQuizDir(name string) string {
-	return filepath.Join(
-		config.C.Contest.Path,
-		config.C.CurrentQuizz,
-		name)
+	return filepath.Join(genQuizDir(), name)
 }
 
 func ansIsY(msg string, io io.Writer) (bool, error) {
