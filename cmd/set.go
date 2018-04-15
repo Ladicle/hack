@@ -44,5 +44,6 @@ func (c *setCmd) run(args []string, opt Option) error {
 	}
 	fmt.Fprintf(c.IO, "Created contest directories to %s\n", OutputDirectory)
 
+	config.C.CurrentQuizz = ""
 	return config.WriteConfig(ConfigPath)
 }

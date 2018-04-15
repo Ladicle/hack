@@ -36,9 +36,6 @@ func (c *jumpCmd) run(args []string, opt Option) error {
 		} else {
 			quiz = nextQuiz(current, config.C.Contest.Quizzes)
 		}
-		if quiz == "" {
-			return fmt.Errorf("%q is a last quiz, so has not a next quiz", current)
-		}
 	case 1:
 		quiz = flag.Arg(0)
 		if !hasQuiz(quiz, config.C.Contest.Quizzes) {
