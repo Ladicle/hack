@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/atotto/clipboard"
+  packages = ["."]
+  revision = "5e2c7bddca04488284428a201e4a15615f7a5074"
+
+[[projects]]
   name = "github.com/ghodss/yaml"
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
@@ -34,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "132ca22b11eea0db25a7d5854453a050d83c7e5b61d364dfa29581c0f98e4f2b"
+  inputs-digest = "31916ed02a951d8b62c5508abeb0fee3eb16fe695dbde268f4106234d9a6bcde"
   solver-name = "gps-cdcl"
   solver-version = 1
