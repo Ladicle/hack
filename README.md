@@ -92,3 +92,20 @@ Continue to create sample? (y/n): n
 $ ls
 1.in  1.out
 ```
+
+After you finished to write a code, you can check it using
+`test` command. The results are displayed for  each sample
+inputs, and if your code is correct, test command prints
+`AC`. Otherwise, it prints debugging log.
+
+```
+$ hack test
+[AC] input #1
+[AC] input #2
+[AC] input #3
+```
+
+*Status Codes*
+
+* AC: Answer is correct
+* WA: Wrong answer
