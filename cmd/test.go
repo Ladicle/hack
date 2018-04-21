@@ -28,6 +28,10 @@ type testCmd struct {
 }
 
 func (c *testCmd) run(args []string, opt Option) error {
+	if len(args) > 1 {
+		return c.test(opt.WorkDir, args[0])
+	}
+
 	fs, err := ioutil.ReadDir(opt.WorkDir)
 	if err != nil {
 		return err
@@ -45,35 +49,42 @@ func (c *testCmd) run(args []string, opt Option) error {
 	}
 
 	for _, s := range samples {
-		inPath := filepath.Join(opt.WorkDir, fmt.Sprintf("%v.in", s))
-		out, err := runGoFile(inPath, false)
-		if err != nil {
-			fmt.Fprintln(c.IO, string(out))
+		if err := c.test(opt.WorkDir, s); err != nil {
 			return err
 		}
+	}
+	return nil
+}
 
-		outPath := filepath.Join(opt.WorkDir, fmt.Sprintf("%v.out", s))
-		sampleOut, err := ioutil.ReadFile(outPath)
-		if err != nil {
-			return err
-		}
+func (c *testCmd) test(workDir, s string) error {
+	inPath := filepath.Join(workDir, fmt.Sprintf("%v.in", s))
+	out, err := runGoFile(inPath, false)
+	if err != nil {
+		fmt.Fprintln(c.IO, string(out))
+		return err
+	}
 
-		got := strings.TrimSuffix(string(out), "\n")
-		want := strings.TrimSuffix(string(sampleOut), "\n")
-		if got == want {
-			c.printResutl(true, s)
-			continue
-		}
+	outPath := filepath.Join(workDir, fmt.Sprintf("%v.out", s))
+	sampleOut, err := ioutil.ReadFile(outPath)
+	if err != nil {
+		return err
+	}
 
-		c.printResutl(false, s)
-		c.showOutputDiff(got, want)
+	got := strings.TrimSuffix(string(out), "\n")
+	want := strings.TrimSuffix(string(sampleOut), "\n")
+	if got == want {
+		c.printResutl(true, s)
+		return nil
+	}
 
-		if out, err := runGoFile(inPath, true); err != nil {
-			return err
-		} else {
-			fmt.Fprintln(c.IO, "# debug")
-			fmt.Fprintln(c.IO, string(out))
-		}
+	c.printResutl(false, s)
+	c.showOutputDiff(got, want)
+
+	if out, err := runGoFile(inPath, true); err != nil {
+		return err
+	} else {
+		fmt.Fprintln(c.IO, "# debug")
+		fmt.Fprintln(c.IO, string(out))
 	}
 	return nil
 }
