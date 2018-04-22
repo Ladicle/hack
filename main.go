@@ -34,7 +34,8 @@ Options:
   -o --output         Output directory (default: ~/%s)
   -h --help           Show this help message
 
-Commands:\n`, defaultConfigPath, defaultOutputDirectory)
+Commands:
+`, defaultConfigPath, defaultOutputDirectory)
 		cmd.PrintUsage(io)
 	}
 
