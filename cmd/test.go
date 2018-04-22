@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -8,8 +9,18 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/logrusorgru/aurora"
+)
+
+const (
+	defaultTimeout = 2 * time.Second
+	timeoutErrMsg  = "signal: killed"
+
+	statusWA = "WA"
+	statusLT = "LT"
+	statusAC = "AC"
 )
 
 // NewTestCmd tests contest testrmation.
@@ -58,8 +69,12 @@ func (c *testCmd) run(args []string, opt Option) error {
 
 func (c *testCmd) test(workDir, s string) error {
 	inPath := filepath.Join(workDir, fmt.Sprintf("%v.in", s))
-	out, err := runGoFile(inPath, false)
+	out, err := runGoFile(inPath, false, defaultTimeout)
 	if err != nil {
+		if err.Error() == timeoutErrMsg {
+			c.printResutl(statusLT, s)
+			return nil
+		}
 		fmt.Fprintln(c.IO, string(out))
 		return err
 	}
@@ -73,14 +88,18 @@ func (c *testCmd) test(workDir, s string) error {
 	got := strings.TrimSuffix(string(out), "\n")
 	want := strings.TrimSuffix(string(sampleOut), "\n")
 	if got == want {
-		c.printResutl(true, s)
+		c.printResutl(statusAC, s)
 		return nil
 	}
 
-	c.printResutl(false, s)
+	c.printResutl(statusWA, s)
 	c.showOutputDiff(got, want)
 
-	if out, err := runGoFile(inPath, true); err != nil {
+	if out, err := runGoFile(inPath, true, defaultTimeout); err != nil {
+		if err.Error() == timeoutErrMsg {
+			c.printResutl(statusLT, s)
+			return nil
+		}
 		return err
 	} else {
 		fmt.Fprintln(c.IO, "# debug")
@@ -111,27 +130,35 @@ func (c *testCmd) prettyPrintDiff(got, want string) {
 	fmt.Fprintf(c.IO, "%v\n%v\n", aurora.Red(got), aurora.Green(want))
 }
 
-func (c *testCmd) printResutl(result bool, id string) {
-	state := aurora.Green("AC")
-	if !result {
-		state = aurora.Red("WA")
+func (c *testCmd) printResutl(status, id string) {
+	var state aurora.Value
+	switch status {
+	case statusAC:
+		state = aurora.Green(statusAC)
+	case statusWA:
+		state = aurora.Red(statusWA)
+	case statusLT:
+		state = aurora.Brown(statusLT)
 	}
 	fmt.Fprintf(c.IO, "[%v] input #%v\n", state, id)
 }
 
-func runGoFile(path string, debug bool) ([]byte, error) {
+func runGoFile(path string, debug bool, timeout time.Duration) ([]byte, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	var cmd *exec.Cmd
 	if debug {
-		cmd = exec.Command("go", "run", "main.go", "--debug")
+		cmd = exec.CommandContext(ctx, "go", "run", "main.go", "--debug")
 	} else {
-		cmd = exec.Command("go", "run", "main.go")
+		cmd = exec.CommandContext(ctx, "go", "run", "main.go")
 	}
 	cmd.Stdin = f
-	return cmd.Output()
+	return cmd.CombinedOutput()
 }

@@ -109,3 +109,4 @@ $ hack test
 
 * AC: Answer is correct
 * WA: Wrong answer
+* LT: Long time
