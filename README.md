@@ -10,7 +10,11 @@ your code is correct.
 - [Hack](#hack)
     - [Supported contests](#supported-contests)
     - [Installation](#installation)
+    - [Usage](#usage)
     - [Quick Start](#quick-start)
+        - [Preparation](#preparation)
+        - [Create sample input/output files](#create-sample-inputoutput-files)
+        - [Check your answer using samples](#check-your-answer-using-samples)
 
 <!-- markdown-toc end -->
 
@@ -26,7 +30,31 @@ $ git clone https://github.com/Ladicle/hack.git
 $ make install
 ```
 
+## Usage
+
+```
+❯❯❯ hack --help
+Usage: hack [OPTIONS] COMMAND
+
+Options:
+  -c --config          Configuration path (default: ~/.hack)
+  -o --output          Output directory (default: ~/contest)
+  -h --help            Show this help message
+
+Commands:
+  version              Show this command version
+  set <PATH>           Set contest information
+  info                 Info shows information
+  open                 Open shows contest page in browser
+  jump [QUIZ]          Jump move to quiz directory. if not specified quiz option, move to next quiz directory.
+  sample [-i] [NUMBER] Sample creates input/output sample
+  test [NUMBER]        Test tests your code with all samples if you don't specified the number
+  copy                 Corpy copies your code to clipboard
+```
+
 ## Quick Start
+
+### Preparation
 
 First of all, you need to set current contest information
 as follows. If you do not already have hack command, please 
@@ -62,6 +90,8 @@ $ hack open
 # open 'https://abc093.contest.atcoder.jp/' in browser.
 ```
 
+### Create sample input/output files
+
 That's all preparation before contest begin. After opened
 the quizzes, you probably read a quiz sentence, and create
 a sample input/output files for testing. `sample` command
@@ -92,6 +122,8 @@ Continue to create sample? (y/n): n
 $ ls
 1.in  1.out
 ```
+
+### Check your answer using samples
 
 After you finished to write a code, you can check it using
 `test` command. The results are displayed for  each sample
