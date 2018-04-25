@@ -62,12 +62,12 @@ refer the [Installation](#installation) section.
 
 *atcoder*
 ```
-$ hack set atcoder/abc/93
+$ hack set atcoder abc 93
 ```
 
 *codejam*
 ```
-$ hack set codejam/2018/practice
+$ hack set codejam 2018 practice
 ```
 
 Next, you want to see contest information, you can print it

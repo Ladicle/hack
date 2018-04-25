@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"strings"
+	"os"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
@@ -27,19 +27,19 @@ type setCmd struct {
 
 func (c *setCmd) run(args []string, opt Option) error {
 	flag.Parse()
-	if flag.NArg() >= 2 {
+	if flag.NArg() < 2 {
 		return fmt.Errorf("invalid number of arguments")
 	}
 
 	contest.LoadContest()
 
-	path := strings.Split(flag.Arg(0), "/")
-	ctt, err := contest.GetContest(path[0])
+	ctt, err := contest.GetContest(flag.Arg(0))
 	if err != nil {
 		return fmt.Errorf("failed to get a contest: %v", err)
 	}
 
-	if err := ctt.Set(OutputDirectory, path[1:]); err != nil {
+	os.Args = flag.Args()[1:]
+	if err := ctt.Set(OutputDirectory, os.Args); err != nil {
 		return fmt.Errorf("failed to set a contest: %v", err)
 	}
 	fmt.Fprintf(c.IO, "Created contest directories to %s\n", OutputDirectory)
