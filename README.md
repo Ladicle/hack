@@ -22,6 +22,7 @@ your code is correct.
 
 - AtCorder
 - Google Code Jam
+- Free format
 
 ## Installation
 
@@ -68,6 +69,11 @@ $ hack set atcoder abc 93
 *codejam*
 ```
 $ hack set codejam 2018 practice
+```
+
+*free format*
+```
+$ hack set free --number 2 ant-book ch1
 ```
 
 Next, you want to see contest information, you can print it

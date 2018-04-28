@@ -14,6 +14,7 @@ var contests []Contest
 func LoadContest() {
 	addContest(NewAtCorderContest())
 	addContest(NewCodeJamContest())
+	addContest(NewFreeContest())
 }
 
 func addContest(c Contest) {
