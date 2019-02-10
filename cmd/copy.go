@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/atotto/clipboard"
 )
@@ -24,9 +26,30 @@ type copyCmd struct {
 }
 
 func (c *copyCmd) run(args []string, opt Option) error {
-	code, err := ioutil.ReadFile(filepath.Join(opt.WorkDir, "main.go"))
+	files, err := ioutil.ReadDir(opt.WorkDir)
 	if err != nil {
 		return err
 	}
-	return clipboard.WriteAll(string(code))
+
+	var fname string
+	for _, f := range files {
+		if !f.IsDir() && strings.HasPrefix(f.Name(), "main") {
+			fname = f.Name()
+			break
+		}
+	}
+	if fname == "" {
+		return fmt.Errorf("not found a program: the program must have 'main' prefix")
+	}
+
+	code, err := ioutil.ReadFile(filepath.Join(opt.WorkDir, fname))
+	if err != nil {
+		return err
+	}
+
+	if err := clipboard.WriteAll(string(code)); err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(c.IO, "succeeded in copying %v to the clipboard\n", fname)
+	return err
 }
