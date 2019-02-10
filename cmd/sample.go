@@ -44,11 +44,11 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 	case 0:
 		start = nextSampleNum()
 	case 1:
-		if i, err := strconv.Atoi(flag.Arg(0)); err != nil {
-			fmt.Errorf("%q is not number", flag.Arg(0))
-		} else {
-			start = i
+		i, err := strconv.Atoi(flag.Arg(0))
+		if err != nil {
+			return fmt.Errorf("%q is not number", flag.Arg(0))
 		}
+		start = i
 	default:
 		return fmt.Errorf("invalid number of arguments")
 	}
@@ -139,7 +139,7 @@ func ansIsY(msg string, io io.Writer) (bool, error) {
 func readAndCreateFile(path string) error {
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-		fmt.Errorf("failed to open file %q: %v", path, err)
+		return fmt.Errorf("failed to open file %q: %v", path, err)
 	}
 	defer f.Close()
 
