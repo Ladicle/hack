@@ -18,8 +18,8 @@ func NewVersionCmd(io io.Writer) Command {
 		Short:       "version",
 		Description: "Show this command version",
 		Run: func(args []string, opt Option) error {
-			fmt.Fprintf(io, "%v version is %v", gitRepo, version)
-			return nil
+			_, err := fmt.Fprintf(io, "%v version is %v", gitRepo, version)
+			return err
 		},
 	}
 }

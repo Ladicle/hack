@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -17,7 +16,6 @@ func NewJumpCmd(io io.Writer) Command {
 		Short:       "jump [QUIZ]",
 		Description: "Jump move to quiz directory. if not specified quiz option, move to next quiz directory.",
 		Run: func(args []string, opt Option) error {
-			flag.Parse()
 			if err := s.validate(args); err != nil {
 				return err
 			}
@@ -31,42 +29,41 @@ type jumpCmd struct {
 }
 
 func (c *jumpCmd) validate(args []string) error {
-	if flag.NArg() >= 2 {
-		return fmt.Errorf("invalid number of arguments")
-	}
 	if len(config.C.Contest.Quizzes) < 1 {
-		return fmt.Errorf("You need set contest before")
-	}
-	if flag.NArg() == 1 && !hasQuiz(flag.Arg(0), config.C.Contest.Quizzes) {
-		return fmt.Errorf("%q is unknown quiz", flag.Arg(0))
+		return fmt.Errorf("no contest is set")
 	}
 	return nil
 }
 
 func (c *jumpCmd) run(args []string, opt Option) error {
 	var quiz string
-	switch flag.NArg() {
-	case 0:
+	if len(args) > 2 {
+		// set specified quiz if it exists
+		inQuiz := args[1]
+		if !hasQuiz(inQuiz, config.C.Contest.Quizzes) {
+			return fmt.Errorf("%q is unknown quiz", inQuiz)
+		}
+		quiz = inQuiz
+	} else {
 		quiz = config.C.CurrentQuizz
+		// set next quiz if the current directory is a quiz directory
 		if opt.WorkDir == filepath.Join(config.C.Contest.Path, quiz) {
 			quiz = nextQuiz(quiz, config.C.Contest.Quizzes)
 		}
-	case 1:
-		quiz = flag.Arg(0)
-	}
-
-	if quiz == "" {
-		quiz = config.C.Contest.Quizzes[0]
+		// set the first quiz for the first time
+		if quiz == "" {
+			quiz = config.C.Contest.Quizzes[0]
+		}
 	}
 
 	config.C.CurrentQuizz = quiz
 	if err := config.WriteConfig(ConfigPath); err != nil {
-		return fmt.Errorf("could not update configuration: %v", err)
+		return fmt.Errorf("failed to update configuration: %v", err)
 	}
 
 	dir := filepath.Join(config.C.Contest.Path, quiz)
-	fmt.Fprintf(c.IO, dir)
-	return nil
+	_, err := fmt.Fprintf(c.IO, dir)
+	return err
 }
 
 func hasQuiz(quiz string, list []string) bool {

@@ -76,7 +76,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("filed to get working directory because %v", err)
 	}
-	if err := cmd.HandleCmd(flag.Arg(0), flag.Args()[1:], cmd.Option{WorkDir: workDir}); err != nil {
+	if err := cmd.HandleCmd(flag.Arg(0), flag.Args(), cmd.Option{WorkDir: workDir}); err != nil {
 		return err
 	}
 	return nil

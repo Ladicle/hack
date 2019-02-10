@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"io"
 
@@ -25,12 +24,8 @@ type openCmd struct {
 }
 
 func (c *openCmd) run(args []string, opt Option) error {
-	flag.Parse()
-	if flag.NArg() != 0 {
-		return fmt.Errorf("invalid number of arguments")
+	if config.C.Contest.URL == "" {
+		return fmt.Errorf("this contest has no URL")
 	}
-	if err := open.Start(config.C.Contest.URL); err != nil {
-		return fmt.Errorf("cloud not open %v in automatically", config.C.Contest.URL)
-	}
-	return nil
+	return open.Start(config.C.Contest.URL)
 }

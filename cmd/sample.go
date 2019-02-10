@@ -29,10 +29,14 @@ type sampleCmd struct {
 	IO io.Writer
 }
 
-func (c *sampleCmd) run(args []string, opt Option) error {
-	var start int
-	var interactive bool
+var (
+	startNumber int
+	interactive bool
+)
 
+func (c *sampleCmd) parse(args []string) error {
+	fmt.Println(args)
+	os.Args = args
 	flag.BoolVar(&interactive, "i", false, "Tell you an answer if you continue input samples. (default: false)")
 	flag.Parse()
 
@@ -40,20 +44,24 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 		return fmt.Errorf("could not get a current quiz: please set a current quiz (ex. hack jump)")
 	}
 
-	switch flag.NArg() {
-	case 0:
-		start = nextSampleNum()
-	case 1:
+	if flag.NArg() > 0 {
 		i, err := strconv.Atoi(flag.Arg(0))
 		if err != nil {
-			return fmt.Errorf("%q is not number", flag.Arg(0))
+			return fmt.Errorf("%q is invalid sample number", flag.Arg(0))
 		}
-		start = i
-	default:
-		return fmt.Errorf("invalid number of arguments")
+		startNumber = i
+	} else {
+		startNumber = nextSampleNum()
+	}
+	return nil
+}
+
+func (c *sampleCmd) run(args []string, opt Option) error {
+	if err := c.parse(args); err != nil {
+		return err
 	}
 
-	for n := start; ; n++ {
+	for n := startNumber; ; n++ {
 		inSample := fmt.Sprintf("%d.in", n)
 		outSample := fmt.Sprintf("%d.out", n)
 
@@ -62,19 +70,25 @@ func (c *sampleCmd) run(args []string, opt Option) error {
 			if yes, err := ansIsY(msg, c.IO); err != nil {
 				return err
 			} else if yes {
-				fmt.Fprintln(c.IO)
+				if _, err := fmt.Fprintln(c.IO); err != nil {
+					return err
+				}
 				continue
 			}
 		} else if err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("unexpected error occurred: %v", err)
 		}
 
-		fmt.Fprintf(c.IO, "%v:\n", inSample)
+		if _, err := fmt.Fprintf(c.IO, "%v:\n", inSample); err != nil {
+			return err
+		}
 		if err := readAndCreateFile(genPathInQuizDir(inSample)); err != nil {
 			return err
 		}
 
-		fmt.Fprintf(c.IO, "%v:\n", outSample)
+		if _, err := fmt.Fprintf(c.IO, "%v:\n", outSample); err != nil {
+			return err
+		}
 		if err := readAndCreateFile(genPathInQuizDir(outSample)); err != nil {
 			return err
 		}
@@ -126,7 +140,9 @@ func genPathInQuizDir(name string) string {
 
 func ansIsY(msg string, io io.Writer) (bool, error) {
 	var ans string
-	fmt.Fprintf(io, "%s (y/n): ", msg)
+	if _, err := fmt.Fprintf(io, "%s (y/n): ", msg); err != nil {
+		return false, err
+	}
 	if _, err := fmt.Scanf("%s", &ans); err != nil {
 		return false, fmt.Errorf("failed to read answer: %v", err)
 	}

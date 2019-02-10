@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"io"
 
@@ -25,15 +24,10 @@ type infoCmd struct {
 }
 
 func (c *infoCmd) run(args []string, opt Option) error {
-	flag.Parse()
-	if flag.NArg() != 0 {
-		return fmt.Errorf("invalid number of arguments")
-	}
-
 	y, err := yaml.Marshal(config.C)
 	if err != nil {
 		return fmt.Errorf("failed to convert information to YAML: %v", err)
 	}
-	fmt.Fprintf(c.IO, string(y))
-	return nil
+	_, err = fmt.Fprintf(c.IO, string(y))
+	return err
 }
