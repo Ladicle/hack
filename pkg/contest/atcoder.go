@@ -23,36 +23,34 @@ type atCorder struct {
 func NewAtCorderContest() Contest {
 	atCorder := atCorder{Name: "atcoder"}
 	return Contest{
-		Name: atCorder.Name,
-		Set:  atCorder.set,
+		Name:  atCorder.Name,
+		Set:   atCorder.set,
+		Usage: "atcorder <contest-type: abc,arc,agc> <contest-number>",
 	}
 }
 
-func (a *atCorder) set(output string, arg []string) error {
-	if len(arg) != 2 {
-		return fmt.Errorf("you need specify AtCorder contest <type> and <number>")
+func (a *atCorder) set(output string, args []string) error {
+	if len(args) < 3 { // args includes this sub-command name(atcoder).
+		return fmt.Errorf("contest type and number is required argument, but only got %v", args)
 	}
 
-	t := arg[0]
-	in, err := strconv.Atoi(arg[1])
+	t, stringN := args[1], args[2]
+	in, err := strconv.Atoi(stringN)
 	if err != nil {
-		return fmt.Errorf("%v is invalid <number> argument", arg[1])
+		return fmt.Errorf("%v is an invalid contest number", stringN)
 	}
 	n := fmt.Sprintf("%03d", in)
 
-	var quizzes []string
-	baseDir := filepath.Join(output, a.Name, t, n)
-	switch t {
-	case typeABC:
-		quizzes = strings.Split("abcd", "")
-	case typeARC:
-		quizzes = strings.Split("cdef", "")
-	case typeAGC:
-		quizzes = strings.Split("abcdef", "")
-	default:
-		return fmt.Errorf("%v is unknown AtCorder contest", t)
+	quizID, err := getQuizID(t)
+	if err != nil {
+		return err
 	}
-	mkdirs(baseDir, quizzes)
+	quizzes := strings.Split(quizID, "")
+
+	baseDir := filepath.Join(output, a.Name, t, n)
+	if err := mkdirs(baseDir, quizzes); err != nil {
+		return err
+	}
 
 	config.C.Contest = config.Contest{
 		Name:    a.Name,
@@ -65,4 +63,16 @@ func (a *atCorder) set(output string, arg []string) error {
 
 func generateAtCorderURL(ctype, number string) string {
 	return fmt.Sprintf("https://%s%s.contest.atcoder.jp/", ctype, number)
+}
+
+func getQuizID(contestType string) (string, error) {
+	switch contestType {
+	case typeABC:
+		return "abcd", nil
+	case typeARC:
+		return "cdef", nil
+	case typeAGC:
+		return "abcdef", nil
+	}
+	return "", fmt.Errorf("%v is unknown AtCorder contest", contestType)
 }

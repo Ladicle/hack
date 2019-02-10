@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"io"
-	"os"
+	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
@@ -15,8 +14,8 @@ func NewSetCmd(io io.Writer) Command {
 	s := setCmd{IO: io}
 	return Command{
 		Name:        "set",
-		Short:       "set <PATH>",
-		Description: "Set contest information",
+		Short:       "set [CONTEST] [ARGS]...",
+		Description: fmt.Sprintf("Set contest information (contests: %v)", strings.Join(contest.ListContestName(), ", ")),
 		Run:         s.run,
 	}
 }
@@ -25,25 +24,29 @@ type setCmd struct {
 	IO io.Writer
 }
 
-func (c *setCmd) run(args []string, opt Option) error {
-	flag.Parse()
-	if flag.NArg() < 2 {
-		return fmt.Errorf("invalid number of arguments")
-	}
-
+func init() {
 	contest.LoadContest()
+}
 
-	ctt, err := contest.GetContest(flag.Arg(0))
+func (c *setCmd) run(args []string, opt Option) error {
+	if len(args) == 0 {
+		return fmt.Errorf("no contest names are specified (contests: %v)",
+			strings.Join(contest.ListContestName(), ", "))
+	}
+	ctt, err := contest.GetContest(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to get a contest: %v", err)
+		return fmt.Errorf("%v (contests: %v)",
+			err, strings.Join(contest.ListContestName(), ", "))
 	}
 
-	os.Args = flag.Args()[1:]
-	if err := ctt.Set(OutputDirectory, os.Args); err != nil {
+	if err := ctt.Set(OutputDirectory, args); err != nil {
 		return fmt.Errorf("failed to set a contest: %v", err)
 	}
-	fmt.Fprintf(c.IO, "Created contest directories to %s\n", OutputDirectory)
+	if _, err := fmt.Fprintf(c.IO, "Success to create contest directories to %s\n", OutputDirectory); err != nil {
+		return err
+	}
 
+	// initialize current quiz pointer
 	config.C.CurrentQuizz = ""
 	return config.WriteConfig(ConfigPath)
 }

@@ -16,20 +16,23 @@ type codeJam struct {
 func NewCodeJamContest() Contest {
 	codeJam := codeJam{Name: "codejam"}
 	return Contest{
-		Name: codeJam.Name,
-		Set:  codeJam.set,
+		Name:  codeJam.Name,
+		Set:   codeJam.set,
+		Usage: "codejam <year> <round>",
 	}
 }
 
-func (a *codeJam) set(output string, arg []string) error {
-	if len(arg) != 2 {
-		return fmt.Errorf("you need specify CodeJam contest <year> and <round>")
+func (a *codeJam) set(output string, args []string) error {
+	if len(args) != 3 { // args contains this sub-command(codejam).
+		return fmt.Errorf("contest <year> and <round> is required argument, but only got %v", args)
 	}
 
-	year, round := arg[0], arg[1]
+	year, round := args[1], args[2]
 	quizzes := strings.Split("abcd", "")
 	baseDir := filepath.Join(output, a.Name, year, round)
-	mkdirs(baseDir, quizzes)
+	if err := mkdirs(baseDir, quizzes); err != nil {
+		return err
+	}
 
 	config.C.Contest = config.Contest{
 		Name:    a.Name,

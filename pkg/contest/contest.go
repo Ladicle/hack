@@ -4,8 +4,9 @@ import "fmt"
 
 // Contest manages programming contest.
 type Contest struct {
-	Name string
-	Set  func(output string, arg []string) error
+	Name  string
+	Set   func(output string, arg []string) error
+	Usage string
 }
 
 var contests []Contest
@@ -24,12 +25,21 @@ func addContest(c Contest) {
 // GetContest returns matched contest instance
 func GetContest(name string) (*Contest, error) {
 	if name == "" {
-		return nil, fmt.Errorf("contest name is required argument")
+		return nil, fmt.Errorf("contest name is a required argument")
 	}
 	for _, c := range contests {
 		if c.Name == name {
 			return &c, nil
 		}
 	}
-	return nil, fmt.Errorf("%s is unsupported contest", name)
+	return nil, fmt.Errorf("%s is an invalid contest name", name)
+}
+
+// ListContestName returns contest name list.
+func ListContestName() []string {
+	var list []string
+	for _, c := range contests {
+		list = append(list, c.Name)
+	}
+	return list
 }

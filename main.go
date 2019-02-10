@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -16,18 +17,15 @@ const (
 	defaultOutputDirectory = "contest"
 )
 
-func main() {
-	io, ioErr := os.Stdout, os.Stderr
-	cmd.LoadCmd(io)
+func init() {
+	cmd.LoadCmd(os.Stdout)
 
 	flag.StringVar(&cmd.ConfigPath, "config", "", "")
 	flag.StringVar(&cmd.ConfigPath, "c", "", "")
-
 	flag.StringVar(&cmd.OutputDirectory, "output", "", "")
 	flag.StringVar(&cmd.OutputDirectory, "o", "", "")
-
 	flag.Usage = func() {
-		fmt.Fprintf(io, `Usage: hack [OPTIONS] COMMAND
+		fmt.Printf(`Usage: hack [OPTIONS] COMMAND
 
 Options:
   -c --config         Configuration path (default: ~/%s)
@@ -36,19 +34,33 @@ Options:
 
 Commands:
 `, defaultConfigPath, defaultOutputDirectory)
-		cmd.PrintUsage(io)
+		cmd.PrintUsage()
+	}
+}
+
+func main() {
+	flag.Parse()
+	if err := validation(); err != nil {
+		log.Fatalf("Failed a root command validation: %v", err)
 	}
 
-	flag.Parse()
+	if err := config.LoadConfig(cmd.ConfigPath); err != nil {
+		log.Fatalf("Filed to load configuration from %v\n", cmd.ConfigPath)
+	}
+
+	if err := run(); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func validation() error {
 	if flag.NArg() == 0 {
-		fmt.Fprintln(ioErr, "Invalid number of arguments")
-		os.Exit(1)
+		return fmt.Errorf("no arguments are specified")
 	}
 
 	home, err := homedir.Dir()
 	if err != nil {
-		fmt.Fprintln(ioErr, "Could not find HOME")
-		os.Exit(1)
+		return fmt.Errorf("not found home directory")
 	}
 	if cmd.ConfigPath == "" {
 		cmd.ConfigPath = filepath.Join(home, defaultConfigPath)
@@ -56,21 +68,16 @@ Commands:
 	if cmd.OutputDirectory == "" {
 		cmd.OutputDirectory = filepath.Join(home, defaultOutputDirectory)
 	}
+	return nil
+}
 
-	if err := config.LoadConfig(cmd.ConfigPath); err != nil {
-		fmt.Fprintf(ioErr, "Filed to load configuration from %v\n", cmd.ConfigPath)
-	}
-
+func run() error {
 	workDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		fmt.Fprintf(ioErr, "Filed to get current working directory.: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("filed to get working directory because %v", err)
 	}
-	opt := cmd.Option{WorkDir: workDir}
-
-	os.Args = flag.Args()
-	if err := cmd.HandleCmd(flag.Arg(0), flag.Args(), opt); err != nil {
-		fmt.Fprintln(ioErr, err)
-		os.Exit(1)
+	if err := cmd.HandleCmd(flag.Arg(0), flag.Args()[1:], cmd.Option{WorkDir: workDir}); err != nil {
+		return err
 	}
+	return nil
 }
