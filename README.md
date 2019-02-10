@@ -34,23 +34,23 @@ $ make install
 ## Usage
 
 ```
-❯❯❯ hack --help
+$ hack --help
 Usage: hack [OPTIONS] COMMAND
 
 Options:
-  -c --config          Configuration path (default: ~/.hack)
-  -o --output          Output directory (default: ~/contest)
-  -h --help            Show this help message
+  -c --config         Configuration path (default: ~/.hack)
+  -o --output         Output directory (default: ~/contest)
+  -h --help           Show this help message
 
 Commands:
-  version              Show this command version
-  set <PATH>           Set contest information
-  info                 Info shows information
-  open                 Open shows contest page in browser
-  jump [QUIZ]          Jump move to quiz directory. if not specified quiz option, move to next quiz directory.
-  sample [-i] [NUMBER] Sample creates input/output sample
-  test [NUMBER]        Test tests your code with all samples if you don't specified the number
-  copy                 Corpy copies your code to clipboard
+  version                  Show this command version
+  set [CONTEST] [ARGS]...  Set contest information (contests: atcoder, codejam, free)
+  info                     Info shows information
+  open                     Open shows contest page in browser
+  jump [QUIZ]              Jump move to quiz directory. if not specified quiz option, move to next quiz directory.
+  sample [-i] [NUMBER]     Sample creates input/output sample
+  test [NUMBER]            Test tests your code with all samples if you don't specified the number
+  copy                     Copy copies your code to clipboard
 ```
 
 ## Quick Start
