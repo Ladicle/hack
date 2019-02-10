@@ -1,4 +1,4 @@
-.PHONY: dep build install clean check
+.PHONY: build install clean check
 
 REPO_NAME=hack
 PKGROOT=github.com/Ladicle/hack
@@ -20,23 +20,20 @@ endif
 
 OUTDIR=_output
 
-dep:
-	dep ensure -update
-
 clean:
 	rm -r $(OUTDIR)
 
 build:
-	CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack
+	GO111MODULE=on CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack
 
 build_darwin64:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack_darwin64
+	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack_darwin64
 
 build_linux64:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack_linux64
+	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack_linux64
 
 install:
-	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) go install -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)"
+	GO111MODULE=on CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) go install -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)"
 
 check:
-	go test $(PKGROOT)/...
+	GO111MODULE=on go test $(PKGROOT)/...
