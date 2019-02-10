@@ -5,8 +5,8 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 
+	"github.com/Ladicle/hack/pkg/util"
 	"github.com/atotto/clipboard"
 )
 
@@ -26,20 +26,9 @@ type copyCmd struct {
 }
 
 func (c *copyCmd) run(args []string, opt Option) error {
-	files, err := ioutil.ReadDir(opt.WorkDir)
+	fname, err := util.GetProgFName(opt.WorkDir)
 	if err != nil {
 		return err
-	}
-
-	var fname string
-	for _, f := range files {
-		if !f.IsDir() && strings.HasPrefix(f.Name(), "main") {
-			fname = f.Name()
-			break
-		}
-	}
-	if fname == "" {
-		return fmt.Errorf("not found a program: the program must have 'main' prefix")
 	}
 
 	code, err := ioutil.ReadFile(filepath.Join(opt.WorkDir, fname))

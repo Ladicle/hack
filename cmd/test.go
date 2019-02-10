@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Ladicle/hack/pkg/util"
 	"github.com/logrusorgru/aurora"
 )
 
@@ -39,8 +40,8 @@ type testCmd struct {
 }
 
 func (c *testCmd) run(args []string, opt Option) error {
-	if len(args) > 1 {
-		return c.test(opt.WorkDir, args[0])
+	if len(args) > 2 {
+		return c.test(opt.WorkDir, args[1])
 	}
 
 	fs, err := ioutil.ReadDir(opt.WorkDir)
@@ -69,13 +70,15 @@ func (c *testCmd) run(args []string, opt Option) error {
 
 func (c *testCmd) test(workDir, s string) error {
 	inPath := filepath.Join(workDir, fmt.Sprintf("%v.in", s))
-	out, err := runGoFile(inPath, false, defaultTimeout)
+	out, err := runProgram(inPath, workDir, false, defaultTimeout)
 	if err != nil {
 		if err.Error() == timeoutErrMsg {
 			c.printResutl(statusLT, s)
 			return nil
 		}
-		fmt.Fprintln(c.IO, string(out))
+		if _, e := fmt.Fprintln(c.IO, string(out)); e != nil {
+			return e
+		}
 		return err
 	}
 
@@ -95,7 +98,7 @@ func (c *testCmd) test(workDir, s string) error {
 	c.printResutl(statusWA, s)
 	c.showOutputDiff(got, want)
 
-	if out, err := runGoFile(inPath, true, defaultTimeout); err != nil {
+	if out, err := runProgram(inPath, workDir, true, defaultTimeout); err != nil {
 		if err.Error() == timeoutErrMsg {
 			c.printResutl(statusLT, s)
 			return nil
@@ -143,22 +146,37 @@ func (c *testCmd) printResutl(status, id string) {
 	fmt.Fprintf(c.IO, "[%v] input #%v\n", state, id)
 }
 
-func runGoFile(path string, debug bool, timeout time.Duration) ([]byte, error) {
-	f, err := os.Open(path)
+func runProgram(inPath, workDir string, debug bool, timeout time.Duration) ([]byte, error) {
+	f, err := os.Open(inPath)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
+	progName, err := util.GetProgFName(workDir)
+	if err != nil {
+		return nil, err
+	}
+
+	progLang, err := util.GetProgLang(progName)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	var cmd *exec.Cmd
-	if debug {
-		cmd = exec.CommandContext(ctx, "go", "run", "main.go", "--debug")
-	} else {
-		cmd = exec.CommandContext(ctx, "go", "run", "main.go")
+	switch progLang {
+	case util.LangGo:
+		cmd = exec.CommandContext(ctx, "go", "run", progName)
+	case util.LangCpp:
+		if err := exec.Command("g++", progName, "-o", "tmp").Run(); err != nil {
+			return nil, err
+		}
+		cmd = exec.CommandContext(ctx, "./tmp")
 	}
+
 	cmd.Stdin = f
 	return cmd.CombinedOutput()
 }
