@@ -37,7 +37,7 @@ func (c *jumpCmd) validate(args []string) error {
 
 func (c *jumpCmd) run(args []string, opt Option) error {
 	var quiz string
-	if len(args) > 2 {
+	if len(args) > 1 {
 		// set specified quiz if it exists
 		inQuiz := args[1]
 		if !hasQuiz(inQuiz, config.C.Contest.Quizzes) {
