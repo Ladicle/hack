@@ -8,27 +8,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const FilePermission = 0644
+const FilePerm = 0644
 
-var targetURL string
-
-var sampleCmd = &cobra.Command{
-	Use:   "sample",
-	Short: "Create sample files",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runSample(cmd, args)
-	},
-	SilenceUsage: true,
+type sampleCmd struct {
+	TargetURL string
 }
 
-func init() {
-	sampleCmd.Flags().StringVar(&targetURL, "url", "",
+func NewSampleCmd() *cobra.Command {
+	sample := sampleCmd{}
+	cmd := &cobra.Command{
+		Use:   "sample",
+		Short: "Create sample files",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return sample.run(cmd, args)
+		},
+		SilenceUsage: true,
+	}
+
+	cmd.Flags().StringVar(&sample.TargetURL, "url", "",
 		"[Required] Scraping target URL **NOTE: Supports AtCoder only**")
-	sampleCmd.MarkFlagRequired("url")
+	cmd.MarkFlagRequired("url")
+
+	return cmd
 }
 
-func runSample(cmd *cobra.Command, args []string) error {
-	ss, err := pkg.SqrapeSample(targetURL)
+func (c *sampleCmd) run(cmd *cobra.Command, args []string) error {
+	ss, err := pkg.SqrapeSample(c.TargetURL)
 	if err != nil {
 		return err
 	}
@@ -36,14 +41,14 @@ func runSample(cmd *cobra.Command, args []string) error {
 		if err := ioutil.WriteFile(
 			fmt.Sprintf("%v.in", sample.ID),
 			[]byte(sample.Input),
-			FilePermission,
+			FilePerm,
 		); err != nil {
 			return err
 		}
 		if err := ioutil.WriteFile(
 			fmt.Sprintf("%v.out", sample.ID),
 			[]byte(sample.Output),
-			FilePermission,
+			FilePerm,
 		); err != nil {
 			return err
 		}

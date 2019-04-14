@@ -18,8 +18,10 @@ func TestSampleCmd(t *testing.T) {
 
 	os.Chdir(tmpDir)
 
-	targetURL = "https://atcoder.jp/contests/abs/tasks/abc085_b"
-	if err := runSample(&cobra.Command{}, []string{}); err != nil {
+	cmd := sampleCmd{
+		TargetURL: "https://atcoder.jp/contests/abs/tasks/abc085_b",
+	}
+	if err := cmd.run(&cobra.Command{}, []string{}); err != nil {
 		t.Error(err)
 	}
 
