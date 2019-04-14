@@ -1,28 +1,13 @@
-package main
+package pkg
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/PuerkitoBio/goquery"
-)
-
-const (
-	targetURL = "https://atcoder.jp/contests/abs/tasks/abc085_b"
 )
 
 type Sample struct {
 	ID     int
 	Input  string
 	Output string
-}
-
-func main() {
-	ss, err := sqrapeSample(targetURL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(ss)
 }
 
 func sqrapeSample(target string) ([]*Sample, error) {
