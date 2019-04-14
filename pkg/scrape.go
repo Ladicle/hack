@@ -10,7 +10,7 @@ type Sample struct {
 	Output string
 }
 
-func sqrapeSample(target string) ([]*Sample, error) {
+func SqrapeSample(target string) ([]*Sample, error) {
 	var ss []*Sample
 
 	doc, err := goquery.NewDocument(target)
@@ -26,7 +26,7 @@ func sqrapeSample(target string) ([]*Sample, error) {
 		}
 		if i%2 == 1 {
 			ss = append(ss, &Sample{
-				ID:    i,
+				ID:    i/2 + 1,
 				Input: s.Text(),
 			})
 		} else {
