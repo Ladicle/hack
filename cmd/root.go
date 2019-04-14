@@ -17,6 +17,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(NewVersionCmd())
 	rootCmd.AddCommand(NewSampleCmd())
+	rootCmd.AddCommand(NewCopyCmd())
 }
 
 func Execute() error {

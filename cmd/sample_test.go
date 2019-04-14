@@ -6,17 +6,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/Ladicle/hack/pkg/ttool"
 	"github.com/spf13/cobra"
 )
 
 func TestSampleCmd(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "hack_sample")
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpDir := ttool.CreateAndGoWs(t)
 	defer os.RemoveAll(tmpDir)
-
-	os.Chdir(tmpDir)
 
 	cmd := sampleCmd{
 		TargetURL: "https://atcoder.jp/contests/abs/tasks/abc085_b",
