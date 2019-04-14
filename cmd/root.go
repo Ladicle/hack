@@ -18,6 +18,7 @@ func init() {
 	rootCmd.AddCommand(NewVersionCmd())
 	rootCmd.AddCommand(NewSampleCmd())
 	rootCmd.AddCommand(NewCopyCmd())
+	rootCmd.AddCommand(NewInitCmd())
 }
 
 func Execute() error {
