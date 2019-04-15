@@ -9,12 +9,14 @@ import (
 
 func NewInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "init",
-		Short: "Initialize workspace for the contest",
+		Use:     "init",
+		Aliases: []string{"i"},
+		Short:   "Initialize workspace for the contest",
 	}
 
 	atcoder := &cobra.Command{
-		Use:     "at [contest_id]",
+		Use:     "atcoder [contest_id]",
+		Aliases: []string{"at", "a"},
 		Example: "at abc123",
 		Short:   "Initialize workspace for AtCoder",
 		RunE: func(cmd *cobra.Command, args []string) error {

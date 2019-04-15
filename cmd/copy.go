@@ -11,8 +11,9 @@ import (
 
 func NewCopyCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "copy",
-		Short: "Copy main program to clipboard",
+		Use:     "copy",
+		Aliases: []string{"c"},
+		Short:   "Copy main program to clipboard",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fname, err := getProgName()
 			if err != nil {
