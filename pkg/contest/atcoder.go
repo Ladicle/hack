@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Ladicle/hack/pkg/config"
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -33,7 +34,7 @@ func (a AtCoder) ContestDir() (string, error) {
 	}
 
 	// FIXME: contests path need to change
-	return filepath.Join(u.HomeDir, "contest", "atcoder", a.ContestID), nil
+	return filepath.Join(u.HomeDir, config.BaseDir(), "atcoder", a.ContestID), nil
 }
 
 func (a AtCoder) QuizDir(quizID string) (string, error) {
