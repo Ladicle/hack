@@ -25,7 +25,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "",
 		fmt.Sprintf("config file (default %v)", config.DefaultCfg()))
 
 	rootCmd.AddCommand(NewVersionCmd())

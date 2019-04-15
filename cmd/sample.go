@@ -17,8 +17,9 @@ type sampleCmd struct {
 func NewSampleCmd() *cobra.Command {
 	sample := sampleCmd{}
 	cmd := &cobra.Command{
-		Use:   "sample",
-		Short: "Create sample files",
+		Use:     "sample",
+		Aliases: []string{"p"},
+		Short:   "Create sample files",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return sample.run(cmd, args)
 		},
