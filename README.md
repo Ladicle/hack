@@ -24,12 +24,15 @@ Usage:
   hack [command]
 
 Available Commands:
+  copy        Copy main program to clipboard
   help        Help about any command
+  init        Initialize workspace for the contest
   sample      Create sample files
   version     Show this command version
 
 Flags:
-  -h, --help   help for hack
+      --config string   config file (default ~/.hack.yaml)
+  -h, --help            help for hack
 
 Use "hack [command] --help" for more information about a command.
 ```
