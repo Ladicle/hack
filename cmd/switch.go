@@ -11,7 +11,7 @@ func NewSwitchCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "switch [host]/[contest_id]",
 		Aliases: []string{"sw"},
-		Short:   "Copy main program to clipboard",
+		Short:   "Switch contest current contest",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return fmt.Errorf("required argument \"[host]/[contest_id]\" not set")
