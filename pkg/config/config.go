@@ -14,6 +14,7 @@ const (
 	defaultBaseDir = "contest"
 
 	baseDirKey = "BaseDir"
+	currentKey = "Current"
 )
 
 func Load(overwriteCfg string) {
@@ -51,6 +52,10 @@ func DefaultCfg() string {
 		os.Exit(1)
 	}
 	return filepath.Join(u.HomeDir, defaultConfig)
+}
+
+func SetCurrent(c string) {
+	viper.Set(currentKey, c)
 }
 
 func BaseDir() string {
