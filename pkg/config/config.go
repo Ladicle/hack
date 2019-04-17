@@ -61,3 +61,11 @@ func SetCurrent(c string) {
 func BaseDir() string {
 	return viper.GetString(baseDirKey)
 }
+
+func CurrentContestPath() string {
+	return filepath.Join(BaseDir(), viper.GetString(currentKey))
+}
+
+func CurrentQuizPath(quiz string) string {
+	return filepath.Join(CurrentContestPath(), quiz)
+}
