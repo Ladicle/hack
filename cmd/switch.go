@@ -2,32 +2,22 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 
-	"github.com/atotto/clipboard"
+	"github.com/Ladicle/hack/pkg/config"
 	"github.com/spf13/cobra"
 )
 
 func NewSwitchCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "switch [contest_id]",
+		Use:     "switch [host]/[contest_id]",
 		Aliases: []string{"sw"},
 		Short:   "Copy main program to clipboard",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fname, err := getProgName()
-			if err != nil {
-				return err
+			if len(args) != 1 {
+				return fmt.Errorf("required argument \"[host]/[contest_id]\" not set")
 			}
-
-			code, err := ioutil.ReadFile(fname)
-			if err != nil {
-				return err
-			}
-
-			if err := clipboard.WriteAll(string(code)); err != nil {
-				return err
-			}
-			fmt.Printf("Copy %v to the clipboard\n", fname)
+			config.SetCurrent(args[0])
+			fmt.Printf("Switch to %v\n", args[0])
 			return nil
 		},
 		SilenceUsage: true,

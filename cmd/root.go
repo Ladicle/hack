@@ -32,6 +32,7 @@ func init() {
 	rootCmd.AddCommand(NewSampleCmd())
 	rootCmd.AddCommand(NewCopyCmd())
 	rootCmd.AddCommand(NewInitCmd())
+	rootCmd.AddCommand(NewSwitchCmd())
 }
 
 func initConfig() {

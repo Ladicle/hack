@@ -9,11 +9,6 @@ import (
 
 const filePerm = 0644
 
-type Contest struct {
-	Host string
-	Name string
-}
-
 type Sample struct {
 	ID     int
 	Input  string

@@ -54,10 +54,10 @@ func DefaultCfg() string {
 	return filepath.Join(u.HomeDir, defaultConfig)
 }
 
-func BaseDir() string {
-	return viper.GetString(baseDirKey)
+func SetCurrent(c string) {
+	viper.Set(currentKey, c)
 }
 
-func Current() string {
-	return viper.GetString(currentKey)
+func BaseDir() string {
+	return viper.GetString(baseDirKey)
 }
