@@ -3,11 +3,10 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
+	"github.com/Ladicle/hack/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +38,7 @@ func listDir2(base string) ([]string, error) {
 	}
 
 	for _, lv1 := range lv1fs {
-		if !isVisibleDir(lv1) {
+		if !util.IsVisibleDir(lv1) {
 			continue
 		}
 
@@ -49,7 +48,7 @@ func listDir2(base string) ([]string, error) {
 		}
 
 		for _, lv2 := range lv2fs {
-			if !isVisibleDir(lv2) {
+			if !util.IsVisibleDir(lv2) {
 				continue
 			}
 			list = append(list,
@@ -57,8 +56,4 @@ func listDir2(base string) ([]string, error) {
 		}
 	}
 	return list, nil
-}
-
-func isVisibleDir(f os.FileInfo) bool {
-	return f.IsDir() && !strings.HasPrefix(f.Name(), ".")
 }
