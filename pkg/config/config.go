@@ -14,6 +14,7 @@ const (
 	defaultBaseDir = "contest"
 
 	baseDirKey = "BaseDir"
+	currentKey = "Current"
 )
 
 func Load(overwriteCfg string) {
@@ -55,4 +56,8 @@ func DefaultCfg() string {
 
 func BaseDir() string {
 	return viper.GetString(baseDirKey)
+}
+
+func Current() string {
+	return viper.GetString(currentKey)
 }
