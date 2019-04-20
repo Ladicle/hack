@@ -35,6 +35,7 @@ func init() {
 	rootCmd.AddCommand(NewSwitchCmd())
 	rootCmd.AddCommand(NewListCmd())
 	rootCmd.AddCommand(NewJumpCmd())
+	rootCmd.AddCommand(NewTestCmd())
 }
 
 func initConfig() {

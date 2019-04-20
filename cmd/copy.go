@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 
+	"github.com/Ladicle/hack/pkg/util"
 	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ func NewCopyCmd() *cobra.Command {
 		Aliases: []string{"c"},
 		Short:   "Copy main program to clipboard",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fname, err := getProgName()
+			fname, err := util.GetProgName()
 			if err != nil {
 				return err
 			}
@@ -33,21 +33,4 @@ func NewCopyCmd() *cobra.Command {
 		},
 		SilenceUsage: true,
 	}
-}
-
-func getProgName() (string, error) {
-	var fname string
-
-	fs, err := ioutil.ReadDir(".")
-	if err != nil {
-		return fname, err
-	}
-
-	for _, f := range fs {
-		if !f.IsDir() && strings.HasPrefix(f.Name(), "main.") {
-			return f.Name(), nil
-		}
-	}
-
-	return fname, fmt.Errorf("not found a main program")
 }
