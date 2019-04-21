@@ -1,4 +1,4 @@
-package cmd
+package util
 
 import (
 	"io/ioutil"
@@ -12,7 +12,7 @@ func TestProgName(t *testing.T) {
 	tmpDir := ttool.CreateAndGoWs(t)
 	defer os.RemoveAll(tmpDir)
 
-	_, err := getProgName()
+	_, err := GetProgName()
 	if err == nil {
 		t.Error("Expected not found error")
 	}
@@ -24,7 +24,7 @@ func TestProgName(t *testing.T) {
 	t.Log(f.Name())
 	f.Close()
 
-	_, err = getProgName()
+	_, err = GetProgName()
 	if err != nil {
 		t.Error(err)
 	}
