@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
@@ -22,35 +23,38 @@ func NewJumpCmd() *cobra.Command {
 				fmt.Println(config.CurrentQuizPath(args[0]))
 				return nil
 			}
-			wd, err := os.Executable()
+
+			// In question directory
+			wd, err := os.Getwd()
 			if err != nil {
 				return err
 			}
+
 			cc := config.CurrentContestPath()
-			s := strings.TrimPrefix(wd, cc)
 
 			fs, err := ioutil.ReadDir(cc)
 			if err != nil {
 				return err
 			}
 
-			// In question directory
-			if s != wd && s != "" {
-				s = strings.TrimPrefix(s, "/")
+			if isInQuizDir(wd, cc) {
+				quiz := filepath.Base(wd)
 				for i, f := range fs {
 					if !util.IsVisibleDir(f) {
 						continue
 					}
-					if f.Name() != s {
+					if f.Name() != quiz {
 						continue
 					}
 					if i+1 == len(fs) {
-						return fmt.Errorf("there is no more quiz")
+						// There is no more quiz
+						fmt.Println(config.CurrentQuizPath(fs[i].Name()))
+						return nil
 					}
 					fmt.Println(config.CurrentQuizPath(fs[i+1].Name()))
 					return nil
 				}
-				return fmt.Errorf("%q is unexpected path", s)
+				return fmt.Errorf("%q is unexpected path", quiz)
 			}
 
 			// In other directory
@@ -65,4 +69,9 @@ func NewJumpCmd() *cobra.Command {
 		},
 		SilenceUsage: true,
 	}
+}
+
+func isInQuizDir(workingDir, contestPath string) bool {
+	s := strings.TrimPrefix(workingDir, contestPath)
+	return s != workingDir && s != ""
 }
