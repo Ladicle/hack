@@ -47,7 +47,7 @@ func runTest(timeout time.Duration) error {
 	// Compile the main program
 	tester := lang.GetTester(fname)
 	if err := tester.Compile(); err != nil {
-		fmt.Printf("[%v] %v", aurora.Red("CE").Bold(), fname)
+		fmt.Printf("[%v] %v\n", aurora.Red("CE").Bold(), fname)
 		return err
 	}
 
@@ -77,7 +77,8 @@ func runTest(timeout time.Duration) error {
 			return err
 		}
 		bwant, err := ioutil.ReadFile(fmt.Sprintf("%v.out", id))
-		got, want := string(bgot), string(bwant)
+		got, want := strings.TrimSuffix(string(bgot), "\n"),
+			strings.TrimSuffix(string(bwant), "\n")
 		if got == want {
 			fmt.Printf("[%v] Sample #%v\n",
 				aurora.Green("AC").Bold(), id)
