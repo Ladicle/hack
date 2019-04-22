@@ -27,11 +27,15 @@ Available Commands:
   copy        Copy main program to clipboard
   help        Help about any command
   init        Initialize workspace for the contest
+  jump        Get current quiz directory
+  list        list contests
   sample      Create sample files
+  switch      Switch contest current contest
+  test        Test main program
   version     Show this command version
 
 Flags:
-      --config string   config file (default ~/.hack.yaml)
+  -c, --config string   config file (default /home/ladicle/.hack.yaml)
   -h, --help            help for hack
 
 Use "hack [command] --help" for more information about a command.
