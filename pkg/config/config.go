@@ -13,8 +13,10 @@ const (
 	defaultConfig  = ".hack.yaml"
 	defaultBaseDir = "contest"
 
-	baseDirKey = "BaseDir"
-	currentKey = "Current"
+	baseDirKey     = "BaseDir"
+	currentKey     = "Current"
+	atCoderUserKey = "AtCoderUser"
+	atCoderPassKey = "AtCoderPass"
 )
 
 func Load(overwriteCfg string) {
@@ -68,4 +70,12 @@ func CurrentContestPath() string {
 
 func CurrentQuizPath(quiz string) string {
 	return filepath.Join(CurrentContestPath(), quiz)
+}
+
+func AtCoderUser() string {
+	return viper.GetString(atCoderUserKey)
+}
+
+func AtCoderPass() string {
+	return viper.GetString(atCoderPassKey)
 }

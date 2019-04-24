@@ -2,27 +2,34 @@ package contest
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
 	"os/user"
 	"path/filepath"
 	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
+	"github.com/Ladicle/hack/pkg/httputil"
 	"github.com/PuerkitoBio/goquery"
 )
 
 const (
 	atCoderBaseURL  = "https://atcoder.jp/contests"
+	atCoderLoginURL = "https://atcoder.jp/login"
+
 	atCoderQuizPath = "tasks"
 )
 
 func NewAtCoder(id string) *AtCoder {
 	return &AtCoder{
 		ContestID: id,
+		Session:   &httputil.Session{},
 	}
 }
 
 type AtCoder struct {
 	ContestID string
+	Session   *httputil.Session
 }
 
 func (a AtCoder) ContestDir() (string, error) {
@@ -53,8 +60,73 @@ func (a AtCoder) QuizURL(quizID string) string {
 	return fmt.Sprintf("%v/%v", a.QuizzesURL(), quizID)
 }
 
+func (a AtCoder) getCsrfToken(url string) (string, error) {
+	resp, err := a.Session.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromResponse(resp)
+	if err != nil {
+		return "", err
+	}
+
+	var csrfToken string
+	doc.Find("input[name=\"csrf_token\"]").Each(func(i int, s *goquery.Selection) {
+		value, exist := s.Attr("value")
+		if exist {
+			csrfToken = value
+		}
+	})
+	if csrfToken == "" {
+		return "", fmt.Errorf("failed to scrape csrfToken from %v", url)
+	}
+	return csrfToken, nil
+}
+
+func (a AtCoder) Login() error {
+	// allready logind
+	if a.Session.Cookies != nil {
+		return nil
+	}
+
+	csrfToken, err := a.getCsrfToken(atCoderLoginURL)
+	if err != nil {
+		return err
+	}
+	values := url.Values{}
+	values.Add("username", config.AtCoderUser())
+	values.Add("password", config.AtCoderPass())
+	values.Add("csrf_token", csrfToken)
+
+	resp, err := a.Session.PostForm(atCoderLoginURL, &values)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+
+func (a AtCoder) loginAndGet(url string) (*http.Response, error) {
+	if err := a.Login(); err != nil {
+		return nil, err
+	}
+	resp, err := a.Session.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func (a AtCoder) SqrapeQuizzes() ([]string, error) {
-	doc, err := goquery.NewDocument(a.QuizzesURL())
+	resp, err := a.loginAndGet(a.QuizzesURL())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromResponse(resp)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +142,9 @@ func (a AtCoder) SqrapeQuizzes() ([]string, error) {
 		section := strings.Split(path, "/")
 		quizzes = append(quizzes, section[len(section)-1])
 	})
-
+	if len(quizzes) == 0 {
+		return nil, fmt.Errorf("failed to scrape quiz from %v", a.QuizzesURL())
+	}
 	if invalidQuiz {
 		return nil, fmt.Errorf("cannot get valid quizzes from %v", a.QuizzesURL())
 	}
@@ -78,14 +152,19 @@ func (a AtCoder) SqrapeQuizzes() ([]string, error) {
 }
 
 func (a AtCoder) SqrapeSample(quizID string) ([]*Sample, error) {
-	var ss []*Sample
+	resp, err := a.loginAndGet(a.QuizURL(quizID))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 
-	doc, err := goquery.NewDocument(a.QuizURL(quizID))
+	doc, err := goquery.NewDocumentFromResponse(resp)
 	if err != nil {
 		return nil, err
 	}
 
 	// AtCoder outputs both JP and EN content in one page.
+	var ss []*Sample
 	doc.Find(".lang-en pre").Each(func(i int, s *goquery.Selection) {
 		if i == 0 {
 			// first block is not sample
@@ -100,6 +179,9 @@ func (a AtCoder) SqrapeSample(quizID string) ([]*Sample, error) {
 			ss[i/2-1].Output = s.Text()
 		}
 	})
+	if len(ss) == 0 {
+		return nil, fmt.Errorf("failed to scrape samples from %v", a.QuizURL(quizID))
+	}
 	return ss, nil
 }
 
