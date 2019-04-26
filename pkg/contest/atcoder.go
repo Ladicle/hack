@@ -5,12 +5,14 @@ import (
 	"net/http"
 	"net/url"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/httputil"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/golang/glog"
 )
 
 const (
@@ -40,8 +42,7 @@ func (a AtCoder) ContestDir() (string, error) {
 		return dir, err
 	}
 
-	// FIXME: contests path need to change
-	return filepath.Join(u.HomeDir, config.BaseDir(), "atcoder", a.ContestID), nil
+	return filepath.Join(u.HomeDir, config.BaseDir(), HostAtCoder, a.ContestID), nil
 }
 
 func (a AtCoder) QuizDir(quizID string) (string, error) {
@@ -53,14 +54,19 @@ func (a AtCoder) QuizDir(quizID string) (string, error) {
 }
 
 func (a AtCoder) QuizzesURL() string {
-	return fmt.Sprintf("%v/%v/%v", atCoderBaseURL, a.ContestID, atCoderQuizPath)
+	u, _ := url.Parse(atCoderBaseURL)
+	u.Path = path.Join(u.Path, a.ContestID, atCoderQuizPath)
+	return u.String()
 }
 
 func (a AtCoder) QuizURL(quizID string) string {
-	return fmt.Sprintf("%v/%v", a.QuizzesURL(), quizID)
+	u, _ := url.Parse(a.QuizzesURL())
+	u.Path = path.Join(u.Path, quizID)
+	return u.String()
 }
 
 func (a AtCoder) getCsrfToken(url string) (string, error) {
+	glog.V(4).Infof("Getting csrfToken from %v...", url)
 	resp, err := a.Session.Get(url)
 	if err != nil {
 		return "", err
@@ -72,6 +78,7 @@ func (a AtCoder) getCsrfToken(url string) (string, error) {
 		return "", err
 	}
 
+	glog.V(4).Info("Scrapping csrfToken from response...")
 	var csrfToken string
 	doc.Find("input[name=\"csrf_token\"]").Each(func(i int, s *goquery.Selection) {
 		value, exist := s.Attr("value")
@@ -82,29 +89,35 @@ func (a AtCoder) getCsrfToken(url string) (string, error) {
 	if csrfToken == "" {
 		return "", fmt.Errorf("failed to scrape csrfToken from %v", url)
 	}
+	glog.V(4).Info("Success to get csrfToken")
 	return csrfToken, nil
 }
 
 func (a AtCoder) Login() error {
-	// allready logind
 	if a.Session.Cookies != nil {
+		glog.V(4).Info("Already logind to the AtCoder")
 		return nil
 	}
 
+	glog.V(4).Info("Getting HTTP session...")
 	csrfToken, err := a.getCsrfToken(atCoderLoginURL)
 	if err != nil {
 		return err
 	}
+
 	values := url.Values{}
 	values.Add("username", config.AtCoderUser())
 	values.Add("password", config.AtCoderPass())
 	values.Add("csrf_token", csrfToken)
 
+	glog.V(4).Infof("Login to the AtCoder as %q...", config.AtCoderUser())
 	resp, err := a.Session.PostForm(atCoderLoginURL, &values)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
+	glog.V(4).Info("Login succeeded")
 	return nil
 }
 
@@ -112,6 +125,7 @@ func (a AtCoder) loginAndGet(url string) (*http.Response, error) {
 	if err := a.Login(); err != nil {
 		return nil, err
 	}
+	glog.V(4).Infof("Getting %v...", url)
 	resp, err := a.Session.Get(url)
 	if err != nil {
 		return nil, err
@@ -119,13 +133,14 @@ func (a AtCoder) loginAndGet(url string) (*http.Response, error) {
 	return resp, nil
 }
 
-func (a AtCoder) SqrapeQuizzes() ([]string, error) {
+func (a AtCoder) ScrapeQuizzes() ([]string, error) {
 	resp, err := a.loginAndGet(a.QuizzesURL())
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
+	glog.V(4).Infof("Scrapping quizzes from %v...", a.QuizzesURL())
 	doc, err := goquery.NewDocumentFromResponse(resp)
 	if err != nil {
 		return nil, err
@@ -136,11 +151,13 @@ func (a AtCoder) SqrapeQuizzes() ([]string, error) {
 	doc.Find("table tbody tr").Each(func(i int, s *goquery.Selection) {
 		path, ok := s.Find("a").First().Attr("href")
 		if !ok {
+			glog.Warningf("Node #%v: has not URL attribute", i)
 			invalidQuiz = true
 		}
 		// path has /contests/<id>/tasks/<quiz_id>
 		section := strings.Split(path, "/")
 		quizzes = append(quizzes, section[len(section)-1])
+		glog.V(8).Infof("Node #%v: save quizID from %v", i, section)
 	})
 	if len(quizzes) == 0 {
 		return nil, fmt.Errorf("failed to scrape quiz from %v", a.QuizzesURL())
@@ -148,16 +165,18 @@ func (a AtCoder) SqrapeQuizzes() ([]string, error) {
 	if invalidQuiz {
 		return nil, fmt.Errorf("cannot get valid quizzes from %v", a.QuizzesURL())
 	}
+	glog.V(4).Info("Success to scrape quizzes")
 	return quizzes, nil
 }
 
-func (a AtCoder) SqrapeSample(quizID string) ([]*Sample, error) {
+func (a AtCoder) ScrapeSample(quizID string) ([]*Sample, error) {
 	resp, err := a.loginAndGet(a.QuizURL(quizID))
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
+	glog.V(4).Infof("Scraping samples from %v...", a.QuizURL(quizID))
 	doc, err := goquery.NewDocumentFromResponse(resp)
 	if err != nil {
 		return nil, err
@@ -167,26 +186,27 @@ func (a AtCoder) SqrapeSample(quizID string) ([]*Sample, error) {
 	var ss []*Sample
 	doc.Find(".lang-en pre").Each(func(i int, s *goquery.Selection) {
 		if i == 0 {
-			// first block is not sample
+			glog.V(8).Infof("Node #%v: skip it because first block is not sample", i)
 			return
 		}
 		if i%2 == 1 {
-			ss = append(ss, &Sample{
-				ID:    i/2 + 1,
-				Input: s.Text(),
-			})
-		} else {
-			ss[i/2-1].Output = s.Text()
+			id := i/2 + 1
+			glog.V(8).Infof("Node #%v: append a sample as %v.in", i, id)
+			ss = append(ss, &Sample{ID: id, Input: s.Text()})
+			return
 		}
+		glog.V(8).Infof("Node #%v: append a sample as %v.out", i, i/2)
+		ss[i/2-1].Output = s.Text()
 	})
 	if len(ss) == 0 {
 		return nil, fmt.Errorf("failed to scrape samples from %v", a.QuizURL(quizID))
 	}
+	glog.V(4).Info("Success to scrape samples")
 	return ss, nil
 }
 
 func (a AtCoder) SetupQuizDir() error {
-	quizzes, err := a.SqrapeQuizzes()
+	quizzes, err := a.ScrapeQuizzes()
 	if err != nil {
 		return err
 	}
@@ -201,7 +221,7 @@ func (a AtCoder) SetupQuizDir() error {
 	}
 
 	for _, quiz := range quizzes {
-		ss, err := a.SqrapeSample(quiz)
+		ss, err := a.ScrapeSample(quiz)
 		if err != nil {
 			return err
 		}

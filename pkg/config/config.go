@@ -3,6 +3,7 @@ package config
 import (
 	"os/user"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -47,6 +48,16 @@ func BaseDir() string {
 
 func CurrentContestPath() string {
 	return filepath.Join(BaseDir(), viper.GetString(currentKey))
+}
+
+func CurrentHost() string {
+	c := viper.GetString(currentKey)
+	return strings.Split(c, "/")[0]
+}
+
+func CurrentContestID() string {
+	c := viper.GetString(currentKey)
+	return strings.Split(c, "/")[1]
 }
 
 func SetCurrentQuizPath(quiz string) string {
