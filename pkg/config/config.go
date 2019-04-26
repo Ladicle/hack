@@ -29,15 +29,6 @@ func Load(overwriteCfg string) error {
 	return viper.ReadInConfig()
 }
 
-func setDefaults() error {
-	u, err := user.Current()
-	if err != nil {
-		return err
-	}
-	viper.SetDefault(baseDirKey, filepath.Join(u.HomeDir, DefaultBaseDir))
-	return nil
-}
-
 func Save() error {
 	return viper.WriteConfig()
 }
@@ -66,6 +57,14 @@ func AtCoderUser() string {
 	return viper.GetString(atCoderUserKey)
 }
 
+func SetAtCoderUser(user string) {
+	viper.Set(atCoderUserKey, user)
+}
+
 func AtCoderPass() string {
 	return viper.GetString(atCoderPassKey)
+}
+
+func SetAtCoderPass(pass string) {
+	viper.Set(atCoderPassKey, pass)
 }

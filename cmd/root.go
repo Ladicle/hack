@@ -7,11 +7,13 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/golang/glog"
 	"github.com/kyokomi/emoji"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
@@ -62,37 +64,71 @@ func initConfig() {
 	}
 
 	// set defaults at first time
-	emoji.Println(":tada:Welcome to the Hack!\n\nBefore start hacking, please answer some questions.\n")
+	emoji.Println("Welcome to the Hack!:tada:\n\n:robot:< I'm a hack bot!\n   < Before start hacking, please answer some questions.\n")
 
 	count := 1
 	if err := initBaseDir(count); err != nil {
 		glog.Fatal(err)
 	}
 	count++
+
+	if err := initAtCoder(count); err != nil {
+		glog.Fatal(err)
+	}
+	count++
 }
 
 func initBaseDir(count int) error {
-	baseDir := config.BaseDir()
-	if baseDir != "" {
-		return nil
-	}
+	var baseDir string
 
-	emoji.Printf("%v. Where do you put contests code? (default: ~/%v)\n->",
+	fmt.Printf("%v. Where do you put contests code? (default: ~/%v)\n-> ",
 		count, config.DefaultBaseDir)
-	fmt.Scanf("%s", &baseDir)
+	fmt.Scanln(&baseDir)
+	fmt.Println()
 	baseDir = strings.TrimSpace(baseDir)
 
 	u, err := user.Current()
 	if err != nil {
 		return err
 	}
+
 	if baseDir == "" {
 		baseDir = filepath.Join(u.HomeDir, config.DefaultBaseDir)
 	}
 	if strings.HasPrefix(baseDir, "~") {
 		baseDir = strings.Replace(baseDir, "~", u.HomeDir, 1)
 	}
+
 	config.SetBaseDir(baseDir)
+	glog.V(4).Info("Saved base directory")
+	return nil
+}
+
+func initAtCoder(count int) error {
+	var ans string
+	fmt.Printf("%v. Do you have AtCoder account? (y/n)\n-> ", count)
+	fmt.Scanln(&ans)
+
+	if ans != "y" {
+		fmt.Printf("OK! I'll skip this.\n\n")
+		return nil
+	}
+
+	var user, pass string
+	fmt.Printf("%v.1. Tell me the username.\n-> ", count)
+	fmt.Scanln(&user)
+	fmt.Printf("%v.2. Tell me the password.\n-> ", count)
+	bpass, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		return err
+	}
+	pass = string(bpass)
+	fmt.Printf("\n\n")
+
+	config.SetAtCoderUser(user)
+	config.SetAtCoderPass(pass)
+
+	glog.V(4).Info("Saved AtCoder username and password")
 	return nil
 }
 
