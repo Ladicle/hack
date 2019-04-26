@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"os"
 	"os/user"
 	"path/filepath"
 
@@ -10,8 +8,8 @@ import (
 )
 
 const (
-	defaultConfig  = ".hack.yaml"
-	defaultBaseDir = "contest"
+	DefaultConfig  = ".hack.yaml"
+	DefaultBaseDir = "contest"
 
 	baseDirKey     = "BaseDir"
 	currentKey     = "Current"
@@ -19,45 +17,28 @@ const (
 	atCoderPassKey = "AtCoderPass"
 )
 
-func Load(overwriteCfg string) {
-	viper.SetConfigFile(DefaultCfg())
-	if overwriteCfg != "" {
-		viper.SetConfigFile(overwriteCfg)
-	}
-
-	if err := viper.ReadInConfig(); err != nil {
-		if !os.IsNotExist(err) {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		// set defaults at first time
-		setDefaults()
-	}
-}
-
-func setDefaults() error {
+func Load(overwriteCfg string) error {
 	u, err := user.Current()
 	if err != nil {
 		return err
 	}
-	viper.SetDefault(baseDirKey, filepath.Join(u.HomeDir, defaultBaseDir))
-	return nil
+	viper.SetConfigFile(filepath.Join(u.HomeDir, DefaultConfig))
+	if overwriteCfg != "" {
+		viper.SetConfigFile(overwriteCfg)
+	}
+	return viper.ReadInConfig()
 }
 
 func Save() error {
 	return viper.WriteConfig()
 }
 
-func DefaultCfg() string {
-	u, err := user.Current()
-	if err != nil {
-		os.Exit(1)
-	}
-	return filepath.Join(u.HomeDir, defaultConfig)
-}
-
 func SetCurrent(c string) {
 	viper.Set(currentKey, c)
+}
+
+func SetBaseDir(dir string) {
+	viper.Set(baseDirKey, dir)
 }
 
 func BaseDir() string {
@@ -68,7 +49,7 @@ func CurrentContestPath() string {
 	return filepath.Join(BaseDir(), viper.GetString(currentKey))
 }
 
-func CurrentQuizPath(quiz string) string {
+func SetCurrentQuizPath(quiz string) string {
 	return filepath.Join(CurrentContestPath(), quiz)
 }
 
@@ -76,6 +57,14 @@ func AtCoderUser() string {
 	return viper.GetString(atCoderUserKey)
 }
 
+func SetAtCoderUser(user string) {
+	viper.Set(atCoderUserKey, user)
+}
+
 func AtCoderPass() string {
 	return viper.GetString(atCoderPassKey)
+}
+
+func SetAtCoderPass(pass string) {
+	viper.Set(atCoderPassKey, pass)
 }

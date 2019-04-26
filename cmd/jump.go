@@ -20,7 +20,7 @@ func NewJumpCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Display the specified quiz path
 			if len(args) >= 1 {
-				fmt.Println(config.CurrentQuizPath(args[0]))
+				fmt.Println(config.SetCurrentQuizPath(args[0]))
 				return nil
 			}
 
@@ -48,10 +48,10 @@ func NewJumpCmd() *cobra.Command {
 					}
 					if i+1 == len(fs) {
 						// There is no more quiz
-						fmt.Println(config.CurrentQuizPath(fs[i].Name()))
+						fmt.Println(config.SetCurrentQuizPath(fs[i].Name()))
 						return nil
 					}
-					fmt.Println(config.CurrentQuizPath(fs[i+1].Name()))
+					fmt.Println(config.SetCurrentQuizPath(fs[i+1].Name()))
 					return nil
 				}
 				return fmt.Errorf("%q is unexpected path", quiz)
@@ -62,7 +62,7 @@ func NewJumpCmd() *cobra.Command {
 				if !util.IsVisibleDir(f) {
 					continue
 				}
-				fmt.Println(config.CurrentQuizPath(f.Name()))
+				fmt.Println(config.SetCurrentQuizPath(f.Name()))
 				return nil
 			}
 			return fmt.Errorf("%q is unexpected working directory", wd)
