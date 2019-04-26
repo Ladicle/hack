@@ -12,7 +12,7 @@ const (
 func TestSqrapeQuizzes(t *testing.T) {
 	at := NewAtCoder(testContestID)
 
-	got, err := at.SqrapeQuizzes()
+	got, err := at.ScrapeQuizzes()
 	if err != nil {
 		t.Error(err)
 	}
@@ -27,7 +27,7 @@ func TestSqrapeQuizzes(t *testing.T) {
 func TestSqrapeSample(t *testing.T) {
 	at := NewAtCoder(testContestID)
 
-	ss, err := at.SqrapeSample("abc123_a")
+	ss, err := at.ScrapeSample("abc123_a")
 	if err != nil {
 		t.Error(err)
 	}

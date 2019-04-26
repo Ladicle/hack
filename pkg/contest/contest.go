@@ -7,7 +7,11 @@ import (
 	"path/filepath"
 )
 
-const filePerm = 0644
+const (
+	filePerm = 0644
+
+	HostAtCoder = "atcoder"
+)
 
 type Sample struct {
 	ID     int
