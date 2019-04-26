@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Ladicle/hack/pkg/config"
+	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 )
 
@@ -17,8 +18,14 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "hack",
 	Short: "Hack assists your programming contest.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		flag.Parse()
+	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-		return config.Save()
+		glog.V(4).Info("Saving configuration...")
+		err := config.Save()
+		glog.V(4).Info("Saved configuration")
+		return err
 	},
 }
 
@@ -36,6 +43,7 @@ func init() {
 	rootCmd.AddCommand(NewListCmd())
 	rootCmd.AddCommand(NewJumpCmd())
 	rootCmd.AddCommand(NewTestCmd())
+	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 }
 
 func initConfig() {
