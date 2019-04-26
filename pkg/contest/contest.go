@@ -5,6 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/Ladicle/hack/pkg/config"
+	"github.com/golang/glog"
 )
 
 const (
@@ -46,4 +50,13 @@ func mkSamples(quizDir string, samples []*Sample) error {
 		}
 	}
 	return nil
+}
+
+func CurrentQuizID(wd string) (string, error) {
+	s := strings.TrimPrefix(wd, config.CurrentContestPath())
+	if s == wd || s == "" {
+		return s, fmt.Errorf("%q is not quiz directory", wd)
+	}
+	glog.V(8).Infof("CurrentQuiz: %q", s)
+	return strings.TrimPrefix(s, "/"), nil
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
-	"github.com/Ladicle/hack/pkg/pretty"
+	"github.com/Ladicle/hack/pkg/format"
 	"github.com/golang/glog"
 	"github.com/kyokomi/emoji"
 	"github.com/spf13/cobra"
@@ -19,11 +19,11 @@ import (
 const FilePerm = 0644
 
 type sampleCmd struct {
-	progress *pretty.Progress
+	progress *format.Progress
 }
 
 func NewSampleCmd() *cobra.Command {
-	sample := sampleCmd{progress: pretty.NewProgress(os.Stdout)}
+	sample := sampleCmd{progress: format.NewProgress(os.Stdout)}
 	cmd := &cobra.Command{
 		Use:     "sample",
 		Aliases: []string{"p"},
