@@ -1,4 +1,4 @@
-package list
+package get
 
 import (
 	"fmt"
@@ -12,11 +12,11 @@ import (
 
 func NewCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"l"},
-		Short:   "list contests",
+		Use:     "get",
+		Aliases: []string{"g"},
+		Short:   "get contests",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			l, err := listDirLv2(config.BaseDir())
+			l, err := getDirLv2(config.BaseDir())
 			if err != nil {
 				return err
 			}
@@ -29,9 +29,9 @@ func NewCommand() *cobra.Command {
 	}
 }
 
-// listDirLv2 list visible directories up to 2 levels in the base
-func listDirLv2(base string) ([]string, error) {
-	var list []string
+// getDirLv2 gets visible directories up to 2 levels in the base
+func getDirLv2(base string) ([]string, error) {
+	var dirs []string
 	lv1fs, err := ioutil.ReadDir(base)
 	if err != nil {
 		return nil, err
@@ -51,9 +51,9 @@ func listDirLv2(base string) ([]string, error) {
 			if !util.IsVisibleDir(lv2) {
 				continue
 			}
-			list = append(list,
+			dirs = append(dirs,
 				filepath.Join(lv1.Name(), lv2.Name()))
 		}
 	}
-	return list, nil
+	return dirs, nil
 }

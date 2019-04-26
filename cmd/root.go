@@ -9,8 +9,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/Ladicle/hack/pkg/cmd/jump"
-	"github.com/Ladicle/hack/pkg/cmd/list"
+	getcmd "github.com/Ladicle/hack/pkg/cmd/get"
+	jumpcmd "github.com/Ladicle/hack/pkg/cmd/jump"
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/golang/glog"
 	"github.com/kyokomi/emoji"
@@ -46,8 +46,8 @@ func init() {
 		fmt.Sprintf("config file (default ~/%v)", config.DefaultConfig))
 
 	rootCmd.AddCommand(NewVersionCmd())
-	rootCmd.AddCommand(list.NewCommand())
-	rootCmd.AddCommand(jump.NewCommand())
+	rootCmd.AddCommand(getcmd.NewCommand())
+	rootCmd.AddCommand(jumpcmd.NewCommand())
 
 	rootCmd.AddCommand(NewSampleCmd())
 	rootCmd.AddCommand(NewCopyCmd())
