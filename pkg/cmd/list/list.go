@@ -1,4 +1,4 @@
-package cmd
+package list
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewListCmd() *cobra.Command {
+func NewCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"l"},
 		Short:   "list contests",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			l, err := listDir2(config.BaseDir())
+			l, err := listDirLv2(config.BaseDir())
 			if err != nil {
 				return err
 			}
@@ -29,8 +29,8 @@ func NewListCmd() *cobra.Command {
 	}
 }
 
-// list visible directories up to 2 levels in the base
-func listDir2(base string) ([]string, error) {
+// listDirLv2 list visible directories up to 2 levels in the base
+func listDirLv2(base string) ([]string, error) {
 	var list []string
 	lv1fs, err := ioutil.ReadDir(base)
 	if err != nil {

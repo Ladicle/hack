@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/Ladicle/hack/pkg/cmd/list"
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/golang/glog"
 	"github.com/kyokomi/emoji"
@@ -44,11 +45,12 @@ func init() {
 		fmt.Sprintf("config file (default ~/%v)", config.DefaultConfig))
 
 	rootCmd.AddCommand(NewVersionCmd())
+	rootCmd.AddCommand(list.NewCommand())
+
 	rootCmd.AddCommand(NewSampleCmd())
 	rootCmd.AddCommand(NewCopyCmd())
 	rootCmd.AddCommand(NewInitCmd())
 	rootCmd.AddCommand(NewSwitchCmd())
-	rootCmd.AddCommand(NewListCmd())
 	rootCmd.AddCommand(NewJumpCmd())
 	rootCmd.AddCommand(NewTestCmd())
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
