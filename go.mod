@@ -8,6 +8,7 @@ require (
 	github.com/apache/thrift v0.12.0 // indirect
 	github.com/atotto/clipboard v0.1.2
 	github.com/go-kit/kit v0.8.0 // indirect
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jaegertracing/jaeger v1.11.0 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20190417130405-e50442bb4cb5
