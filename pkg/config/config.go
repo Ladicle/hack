@@ -57,7 +57,7 @@ func CurrentHost() string {
 
 func CurrentContestID() string {
 	c := viper.GetString(currentKey)
-	return strings.Split(c, "/")[1]
+	return strings.TrimPrefix(strings.Split(c, "/")[1], "/")
 }
 
 func SetCurrentQuizPath(quiz string) string {

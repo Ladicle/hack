@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/Ladicle/hack/pkg/cmd/jump"
 	"github.com/Ladicle/hack/pkg/cmd/list"
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/golang/glog"
@@ -46,12 +47,12 @@ func init() {
 
 	rootCmd.AddCommand(NewVersionCmd())
 	rootCmd.AddCommand(list.NewCommand())
+	rootCmd.AddCommand(jump.NewCommand())
 
 	rootCmd.AddCommand(NewSampleCmd())
 	rootCmd.AddCommand(NewCopyCmd())
 	rootCmd.AddCommand(NewInitCmd())
 	rootCmd.AddCommand(NewSwitchCmd())
-	rootCmd.AddCommand(NewJumpCmd())
 	rootCmd.AddCommand(NewTestCmd())
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 }
