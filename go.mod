@@ -11,6 +11,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jaegertracing/jaeger v1.11.0 // indirect
+	github.com/kyokomi/emoji v2.1.0+incompatible
 	github.com/logrusorgru/aurora v0.0.0-20190417130405-e50442bb4cb5
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20190324214902-3020fec0e66b // indirect
 	github.com/opentracing/opentracing-go v1.1.0 // indirect
