@@ -1,4 +1,4 @@
-package pretty
+package format
 
 import (
 	"fmt"
@@ -8,28 +8,6 @@ import (
 	"github.com/logrusorgru/aurora"
 )
 
-type Progress struct {
-	spinner *Spinner
-	writer  io.Writer
-}
-
-func NewProgress(w io.Writer) *Progress {
-	return &Progress{
-		spinner: NewSpinner(w),
-		writer:  w,
-	}
-}
-
-func (p *Progress) Start(msg string) {
-	p.spinner.Stop(true)
-	p.spinner.Start(msg)
-}
-
-func (p *Progress) End(success bool) {
-	p.spinner.Stop(success)
-}
-
-// custom CLI loading spinner for kind
 var spinnerFrames = []string{
 	"⠈⠁",
 	"⠈⠑",
