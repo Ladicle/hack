@@ -17,10 +17,10 @@ func NewHackRobot(w io.Writer) *HackRobot {
 	}
 }
 
-// Fatal prints error message and calls Exit(1).
+// Fatal prints error message to the Stderr and calls Exit(1).
 func (h *HackRobot) Fatal(format string, args ...interface{}) {
 	h.Progress.End(false)
-	h.Robot.PrintlnRed(format, args...)
+	h.Robot.FprintlnRed(os.Stderr, format, args...)
 	os.Exit(1)
 }
 

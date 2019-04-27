@@ -51,15 +51,24 @@ func (r *Robot) PrintlnGreen(format string, args ...interface{}) {
 
 // PrintlnRed prints formatted line string with read arguments.
 func (r *Robot) PrintlnRed(format string, args ...interface{}) {
+	r.FprintlnRed(r.writer, format, args...)
+}
+
+// FprintlnRed prints formatted line string with read arguments.
+func (r *Robot) FprintlnRed(w io.Writer, format string, args ...interface{}) {
 	var aargs []interface{}
 	for _, a := range args {
 		aargs = append(aargs, aurora.Red(a).Bold())
 	}
-	r.printlnf(format, aargs...)
+	r.fprintlnf(w, format, aargs...)
 }
 
 func (r *Robot) printlnf(format string, args ...interface{}) {
-	emoji.Fprintf(r.writer, r.getIcon()+"< "+format+"\n", args...)
+	r.fprintlnf(r.writer, format, args...)
+}
+
+func (r *Robot) fprintlnf(w io.Writer, format string, args ...interface{}) {
+	emoji.Fprintf(w, r.getIcon()+"< "+format+"\n", args...)
 	r.count++
 }
 
