@@ -11,6 +11,7 @@ import (
 
 	getcmd "github.com/Ladicle/hack/pkg/cmd/get"
 	jumpcmd "github.com/Ladicle/hack/pkg/cmd/jump"
+	setcmd "github.com/Ladicle/hack/pkg/cmd/set"
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/golang/glog"
 	"github.com/kyokomi/emoji"
@@ -48,11 +49,11 @@ func init() {
 	rootCmd.AddCommand(NewVersionCmd())
 	rootCmd.AddCommand(getcmd.NewCommand())
 	rootCmd.AddCommand(jumpcmd.NewCommand())
+	rootCmd.AddCommand(setcmd.NewCommand())
 
 	rootCmd.AddCommand(NewSampleCmd())
 	rootCmd.AddCommand(NewCopyCmd())
 	rootCmd.AddCommand(NewInitCmd())
-	rootCmd.AddCommand(NewSwitchCmd())
 	rootCmd.AddCommand(NewTestCmd())
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 }

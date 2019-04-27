@@ -13,6 +13,7 @@ import (
 
 const (
 	filePerm = 0644
+	dirPerm  = 0755
 
 	HostAtCoder = "atcoder"
 )
@@ -23,9 +24,13 @@ type Sample struct {
 	Output string
 }
 
+func MkCurrentContestDir() error {
+	return os.MkdirAll(config.CurrentContestPath(), dirPerm)
+}
+
 func mkQuizDir(contestDir string, quizzes []string) error {
 	for _, n := range quizzes {
-		if err := os.MkdirAll(filepath.Join(contestDir, n), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(contestDir, n), dirPerm); err != nil {
 			return err
 		}
 	}

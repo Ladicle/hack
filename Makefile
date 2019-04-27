@@ -1,5 +1,3 @@
-.PHONY: build install clean check
-
 REPO_NAME=hack
 PKGROOT=github.com/Ladicle/hack
 
@@ -20,9 +18,6 @@ endif
 
 OUTDIR=_output
 
-clean:
-	rm -r $(OUTDIR)
-
 build:
 	GO111MODULE=on CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack
 
@@ -38,3 +33,7 @@ install:
 check:
 	GO111MODULE=on go vet $(PKGROOT)/...
 	GO111MODULE=on go test $(PKGROOT)/...
+
+.PHONY: clean
+clean:
+	-rm -r $(OUTDIR)
