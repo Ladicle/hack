@@ -1,45 +1,67 @@
 package contest
 
-import "fmt"
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 
-// Contest manages programming contest.
-type Contest struct {
-	Name  string
-	Set   func(output string, arg []string) error
-	Usage string
+	"github.com/Ladicle/hack/pkg/config"
+	"github.com/golang/glog"
+)
+
+const (
+	filePerm = 0644
+	dirPerm  = 0755
+
+	HostAtCoder = "atcoder"
+)
+
+type Sample struct {
+	ID     int
+	Input  string
+	Output string
 }
 
-var contests []Contest
-
-// LoadContest loads all contests.
-func LoadContest() {
-	addContest(NewAtCorderContest())
-	addContest(NewCodeJamContest())
-	addContest(NewFreeContest())
+func MkCurrentContestDir() error {
+	return os.MkdirAll(config.CurrentContestPath(), dirPerm)
 }
 
-func addContest(c Contest) {
-	contests = append(contests, c)
-}
-
-// GetContest returns matched contest instance
-func GetContest(name string) (*Contest, error) {
-	if name == "" {
-		return nil, fmt.Errorf("contest name is a required argument")
-	}
-	for _, c := range contests {
-		if c.Name == name {
-			return &c, nil
+func mkQuizDir(contestDir string, quizzes []string) error {
+	for _, n := range quizzes {
+		if err := os.MkdirAll(filepath.Join(contestDir, n), dirPerm); err != nil {
+			return err
 		}
 	}
-	return nil, fmt.Errorf("%s is an invalid contest name", name)
+	return nil
 }
 
-// ListContestName returns contest name list.
-func ListContestName() []string {
-	var list []string
-	for _, c := range contests {
-		list = append(list, c.Name)
+func mkSamples(quizDir string, samples []*Sample) error {
+	for _, sample := range samples {
+		if err := ioutil.WriteFile(
+			filepath.Join(quizDir, fmt.Sprintf("%v.in", sample.ID)),
+			[]byte(sample.Input),
+			filePerm,
+		); err != nil {
+			return err
+		}
+		if err := ioutil.WriteFile(
+			filepath.Join(quizDir, fmt.Sprintf("%v.out", sample.ID)),
+			[]byte(sample.Output),
+			filePerm,
+		); err != nil {
+			return err
+		}
 	}
-	return list
+	return nil
+}
+
+func CurrentQuizID(wd string) (string, error) {
+	s := strings.TrimPrefix(wd, config.CurrentContestPath())
+	if s == wd || s == "" {
+		return s, fmt.Errorf("%q is not quiz directory", wd)
+	}
+	glog.V(8).Infof("CurrentQuiz: %q", s)
+	return strings.TrimPrefix(s, "/"), nil
 }

@@ -2,43 +2,35 @@ package cmd
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
-	"path/filepath"
 
 	"github.com/Ladicle/hack/pkg/util"
 	"github.com/atotto/clipboard"
+	"github.com/spf13/cobra"
 )
 
-// NewCopyCmd copies code to clipboard.
-func NewCopyCmd(io io.Writer) Command {
-	s := copyCmd{IO: io}
-	return Command{
-		Name:        "copy",
-		Short:       "copy",
-		Description: "Copy copies your code to clipboard",
-		Run:         s.run,
-	}
-}
+func NewCopyCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "copy",
+		Aliases: []string{"c"},
+		Short:   "Copy main program to clipboard",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fname, err := util.GetProgName()
+			if err != nil {
+				return err
+			}
 
-type copyCmd struct {
-	IO io.Writer
-}
+			code, err := ioutil.ReadFile(fname)
+			if err != nil {
+				return err
+			}
 
-func (c *copyCmd) run(args []string, opt Option) error {
-	fname, err := util.GetProgFName(opt.WorkDir)
-	if err != nil {
-		return err
+			if err := clipboard.WriteAll(string(code)); err != nil {
+				return err
+			}
+			fmt.Printf("Copy %v to the clipboard\n", fname)
+			return nil
+		},
+		SilenceUsage: true,
 	}
-
-	code, err := ioutil.ReadFile(filepath.Join(opt.WorkDir, fname))
-	if err != nil {
-		return err
-	}
-
-	if err := clipboard.WriteAll(string(code)); err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(c.IO, "succeeded in copying %v to the clipboard\n", fname)
-	return err
 }

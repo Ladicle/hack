@@ -2,24 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"io"
+
+	"github.com/spf13/cobra"
 )
 
-var (
-	// These variables are set at the build time.
-	version string
-	gitRepo string
-)
-
-// NewVersionCmd create version command.
-func NewVersionCmd(io io.Writer) Command {
-	return Command{
-		Name:        "version",
-		Short:       "version",
-		Description: "Show this command version",
-		Run: func(args []string, opt Option) error {
-			_, err := fmt.Fprintf(io, "%v version is %v", gitRepo, version)
-			return err
+func NewVersionCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "version",
+		Aliases: []string{"v"},
+		Short:   "Show this command version",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("%v -- %v\n", gitRepo, version)
 		},
 	}
 }
