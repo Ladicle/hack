@@ -8,6 +8,7 @@ import (
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
+	"github.com/Ladicle/hack/pkg/format"
 	"github.com/Ladicle/hack/pkg/util"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
@@ -18,45 +19,49 @@ func NewCommand() *cobra.Command {
 		Use:     "jump [quiz]",
 		Aliases: []string{"j"},
 		Short:   "Get current quiz directory",
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			var quizPath string
-			if len(args) >= 1 {
-				quizPath = quizPathFromID(args[0])
-			} else {
-				quizPath, err = nextQuizPath()
-			}
-			fmt.Println(quizPath)
-			return nil
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(getPath(args))
 		},
-		SilenceUsage: true,
 	}
 }
 
-func quizPathFromID(quizID string) string {
-	return config.SetCurrentQuizPath(quizID)
-}
+func getPath(args []string) string {
+	if len(args) >= 1 {
+		return config.SetCurrentQuizPath(args[0])
+	}
 
-func nextQuizPath() (string, error) {
-	var nextQuiz string
-
+	hb := format.NewHackRobot(os.Stdout)
 	cc := config.CurrentContestPath()
 	fs, err := ioutil.ReadDir(cc)
 	if err != nil {
-		return nextQuiz, err
+		if os.IsNotExist(err) {
+			hb.Fatal("Not exists the %q directory. Please set the contest.",
+				config.CurrentContest())
+		}
+		glog.Fatal(err)
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		return nextQuiz, err
+		glog.Fatal(err)
 	}
 
 	quiz, err := contest.CurrentQuizID(wd)
 	if err != nil {
 		// In other directory
-		return firstQuizDir(fs)
+		quiz, err := firstQuizDir(fs)
+		if err != nil {
+			// No quiz directories are initialized
+			return cc
+		}
+		return quiz
 	}
 	// In question directory
-	return nextQuizDir(quiz, fs)
+	dir, err := nextQuizDir(quiz, fs)
+	if err != nil {
+		hb.Fatal("%v", err)
+	}
+	return dir
 }
 
 func nextQuizDir(currentQuiz string, fsInDir []os.FileInfo) (string, error) {
@@ -77,7 +82,7 @@ func nextQuizDir(currentQuiz string, fsInDir []os.FileInfo) (string, error) {
 		// return next quiz
 		return config.SetCurrentQuizPath(fsInDir[i+1].Name()), nil
 	}
-	return "", errors.New("not found quiz directory")
+	return "", fmt.Errorf("%q is unexpected quiz directory", currentQuiz)
 }
 
 func firstQuizDir(fsInDir []os.FileInfo) (string, error) {
@@ -88,5 +93,5 @@ func firstQuizDir(fsInDir []os.FileInfo) (string, error) {
 		}
 		return config.SetCurrentQuizPath(f.Name()), nil
 	}
-	return "", errors.New("not found quiz directory")
+	return "", errors.New("not in the current quiz directory")
 }
