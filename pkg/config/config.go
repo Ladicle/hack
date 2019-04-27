@@ -46,6 +46,10 @@ func BaseDir() string {
 	return viper.GetString(baseDirKey)
 }
 
+func CurrentContest() string {
+	return viper.GetString(currentKey)
+}
+
 func CurrentContestPath() string {
 	return filepath.Join(BaseDir(), viper.GetString(currentKey))
 }
