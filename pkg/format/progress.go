@@ -2,6 +2,8 @@ package format
 
 import (
 	"io"
+
+	"github.com/kyokomi/emoji"
 )
 
 type Progress struct {
@@ -14,6 +16,10 @@ func NewProgress(w io.Writer) *Progress {
 		spinner: NewSpinner(w),
 		writer:  w,
 	}
+}
+
+func (p *Progress) StartWithEmojiMsg(emojiMsg string) {
+	p.Start(emoji.Sprint(emojiMsg))
 }
 
 func (p *Progress) Start(msg string) {
