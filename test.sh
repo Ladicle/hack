@@ -1,7 +1,8 @@
 #!/bin/bash -e
 
-echo "# check and build hack command"
-make
+echo "# check and install hack command"
+make check
+make install
 
 echo; echo "# Test help"
 hack -h
