@@ -49,9 +49,9 @@ func (sc *setConfig) run(args []string) {
 	sc.Info("And... it's the first time. Good luck!\n")
 
 	sc.Start("Creating contest directory :package:")
-	defer sc.End()
 	if err := contest.MkCurrentContestDir(); err != nil {
-		sc.Fatal("Sorry, failed to create %q directory", path)
 		glog.Error(err)
+		sc.Fatal("Sorry, failed to create %q directory", path)
 	}
+	sc.Success()
 }

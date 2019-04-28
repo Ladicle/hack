@@ -20,7 +20,6 @@ func NewHackRobot(w io.Writer) *HackRobot {
 
 // Fatal prints error message to the Stderr and calls Exit(1).
 func (h *HackRobot) Fatal(format string, args ...interface{}) {
-	h.Progress.End(false)
 	h.Robot.FprintlnRed(os.Stderr, format, args...)
 	os.Exit(1)
 }
@@ -36,7 +35,7 @@ func (h *HackRobot) Start(format string, args ...interface{}) {
 }
 
 // End finalize robot and progress.
-func (h *HackRobot) End() {
+func (h *HackRobot) Success() {
 	h.Progress.End(true)
 }
 
