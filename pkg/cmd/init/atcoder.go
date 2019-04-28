@@ -25,7 +25,6 @@ func newAtCoderInitializer(hb *format.HackRobot, cid string) *atCoderInitializer
 func (ai *atCoderInitializer) initAtCoderContest() error {
 	ai.Info("Sure! I'll setup environment for %q contest.\n", ai.cID)
 	ai.Start("Scraping %v quizzes :mag_right:", ai.cID)
-	defer ai.End()
 	qs, err := ai.at.ScrapeQuizzes()
 	if err != nil {
 		ai.Error()
@@ -37,6 +36,7 @@ func (ai *atCoderInitializer) initAtCoderContest() error {
 		ai.Error()
 		return err
 	}
+
 	for _, quiz := range qs {
 		if err := ai.createSamples(quiz); err != nil {
 			return err
@@ -47,8 +47,6 @@ func (ai *atCoderInitializer) initAtCoderContest() error {
 
 func (ai *atCoderInitializer) createSamples(quizID string) error {
 	ai.Start("Scraping %v quizzes :inbox_tray:", quizID)
-	defer ai.End()
-
 	ss, err := ai.at.ScrapeSample(quizID)
 	if err != nil {
 		ai.Error()
@@ -63,5 +61,6 @@ func (ai *atCoderInitializer) createSamples(quizID string) error {
 			return err
 		}
 	}
+	ai.Success()
 	return nil
 }

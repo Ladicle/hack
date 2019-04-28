@@ -1,32 +1,47 @@
 package format
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/kyokomi/emoji"
+	"github.com/logrusorgru/aurora"
 )
 
 type Progress struct {
-	spinner *Spinner
+	started bool
+	msg     string
 	writer  io.Writer
 }
 
 func NewProgress(w io.Writer) *Progress {
-	return &Progress{
-		spinner: NewSpinner(w),
-		writer:  w,
-	}
+	return &Progress{writer: w}
 }
 
 func (p *Progress) StartWithEmojiMsg(emojiMsg string) {
-	p.Start(emoji.Sprint(emojiMsg))
+	p.Start(emoji.Sprintf(emojiMsg))
 }
 
 func (p *Progress) Start(msg string) {
-	//p.spinner.Stop(true)
-	p.spinner.Start(msg)
+	p.End(true)
+
+	fmt.Fprintf(p.writer, " - %s", msg)
+
+	p.msg = msg
+	p.started = true
 }
 
 func (p *Progress) End(success bool) {
-	p.spinner.Stop(success)
+	if !p.started {
+		return
+	}
+
+	var icon aurora.Value
+	if success {
+		icon = aurora.Green("✓").Bold()
+
+	} else {
+		icon = aurora.Red("✗").Bold()
+	}
+	fmt.Fprintf(p.writer, "\r %v %s\n", icon, p.msg)
 }
