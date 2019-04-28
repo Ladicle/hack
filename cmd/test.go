@@ -117,6 +117,11 @@ func showOutputDiff(got, want string) {
 			prettyPrintDiff(gotL[i], w)
 		}
 	}
+	if gn > len(wantL) {
+		for i := len(wantL) - 1; i < gn; i++ {
+			fmt.Printf("%v\n", aurora.Red(gotL[i]))
+		}
+	}
 }
 
 func prettyPrintDiff(got, want string) {
