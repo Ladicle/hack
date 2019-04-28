@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -49,6 +50,25 @@ func runTest(timeout time.Duration) error {
 	if err := tester.Compile(); err != nil {
 		fmt.Printf("[%v] %v\n", aurora.Red("CE").Bold(), fname)
 		return err
+	}
+
+	fs, err := ioutil.ReadDir(".")
+	if err != nil {
+		return err
+	}
+	for _, f := range fs {
+		if f.Name() == "testing_tool.py" {
+			cmd := exec.Command("python", "testing_tool.py", "./solution")
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Printf("[%v] testing_tool.py\n", aurora.Red("WA").Bold())
+				fmt.Printf("\nDetail:\n%v", string(out))
+				return err
+			}
+			fmt.Printf("[%v] testing_tool.py\n",
+				aurora.Green("AC").Bold())
+			return nil
+		}
 	}
 
 	sids, err := util.SampleIDs(".")
