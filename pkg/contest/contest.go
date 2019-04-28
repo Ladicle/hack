@@ -16,6 +16,8 @@ const (
 	dirPerm  = 0755
 
 	HostAtCoder = "atcoder"
+	HostCodeJam = "codejam"
+	HostFree    = "free"
 )
 
 type Sample struct {
