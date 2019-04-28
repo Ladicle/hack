@@ -23,7 +23,7 @@ func (p *Progress) StartWithEmojiMsg(emojiMsg string) {
 }
 
 func (p *Progress) Start(msg string) {
-	p.spinner.Stop(true)
+	//p.spinner.Stop(true)
 	p.spinner.Start(msg)
 }
 
