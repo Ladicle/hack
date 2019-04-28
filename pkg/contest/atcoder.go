@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os/user"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
@@ -32,25 +30,6 @@ func NewAtCoder(id string) *AtCoder {
 type AtCoder struct {
 	ContestID string
 	Session   *httputil.Session
-}
-
-func (a AtCoder) ContestDir() (string, error) {
-	var dir string
-
-	u, err := user.Current()
-	if err != nil {
-		return dir, err
-	}
-
-	return filepath.Join(u.HomeDir, config.BaseDir(), HostAtCoder, a.ContestID), nil
-}
-
-func (a AtCoder) QuizDir(quizID string) (string, error) {
-	dir, err := a.ContestDir()
-	if err != nil {
-		return dir, err
-	}
-	return filepath.Join(dir, quizID), nil
 }
 
 func (a AtCoder) QuizzesURL() string {
@@ -203,37 +182,4 @@ func (a AtCoder) ScrapeSample(quizID string) ([]*Sample, error) {
 	}
 	glog.V(4).Info("Success to scrape samples")
 	return ss, nil
-}
-
-func (a AtCoder) SetupQuizDir() error {
-	quizzes, err := a.ScrapeQuizzes()
-	if err != nil {
-		return err
-	}
-
-	cDir, err := a.ContestDir()
-	if err != nil {
-		return err
-	}
-
-	if err := mkQuizDir(cDir, quizzes); err != nil {
-		return err
-	}
-
-	for _, quiz := range quizzes {
-		ss, err := a.ScrapeSample(quiz)
-		if err != nil {
-			return err
-		}
-
-		qDir, err := a.QuizDir(quiz)
-		if err != nil {
-			return err
-		}
-
-		if err := mkSamples(qDir, ss); err != nil {
-			return err
-		}
-	}
-	return nil
 }

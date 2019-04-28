@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	getcmd "github.com/Ladicle/hack/pkg/cmd/get"
+	initcmd "github.com/Ladicle/hack/pkg/cmd/init"
 	jumpcmd "github.com/Ladicle/hack/pkg/cmd/jump"
 	setcmd "github.com/Ladicle/hack/pkg/cmd/set"
 	"github.com/Ladicle/hack/pkg/config"
@@ -50,10 +51,9 @@ func init() {
 	rootCmd.AddCommand(getcmd.NewCommand())
 	rootCmd.AddCommand(jumpcmd.NewCommand())
 	rootCmd.AddCommand(setcmd.NewCommand())
+	rootCmd.AddCommand(initcmd.NewCommand())
 
-	rootCmd.AddCommand(NewSampleCmd())
 	rootCmd.AddCommand(NewCopyCmd())
-	rootCmd.AddCommand(NewInitCmd())
 	rootCmd.AddCommand(NewTestCmd())
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 }

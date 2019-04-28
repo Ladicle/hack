@@ -28,32 +28,37 @@ func MkCurrentContestDir() error {
 	return os.MkdirAll(config.CurrentContestPath(), dirPerm)
 }
 
-func mkQuizDir(contestDir string, quizzes []string) error {
+func MkQuizDir(quizzes []string) error {
 	for _, n := range quizzes {
-		if err := os.MkdirAll(filepath.Join(contestDir, n), dirPerm); err != nil {
+		if err := os.Mkdir(n, dirPerm); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func mkSamples(quizDir string, samples []*Sample) error {
-	for _, sample := range samples {
-		if err := ioutil.WriteFile(
-			filepath.Join(quizDir, fmt.Sprintf("%v.in", sample.ID)),
-			[]byte(sample.Input),
-			filePerm,
-		); err != nil {
-			return err
-		}
-		if err := ioutil.WriteFile(
-			filepath.Join(quizDir, fmt.Sprintf("%v.out", sample.ID)),
-			[]byte(sample.Output),
-			filePerm,
-		); err != nil {
-			return err
-		}
+func MkSample(quizDir string, sample *Sample) error {
+	out := fmt.Sprintf("%v.in", sample.ID)
+	if err := ioutil.WriteFile(
+		filepath.Join(quizDir, out),
+		[]byte(sample.Input),
+		filePerm,
+	); err != nil {
+		return err
 	}
+	glog.V(4).Infof("Saved sample#%v to the %v", sample.ID, out)
+	glog.V(8).Info(sample.Input)
+
+	out = fmt.Sprintf("%v.out", sample.ID)
+	if err := ioutil.WriteFile(
+		filepath.Join(quizDir, out),
+		[]byte(sample.Output),
+		filePerm,
+	); err != nil {
+		return err
+	}
+	glog.V(4).Infof("Saved sample#%v to the %v", sample.ID, out)
+	glog.V(8).Info(sample.Output)
 	return nil
 }
 

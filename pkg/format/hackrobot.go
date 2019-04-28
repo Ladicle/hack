@@ -1,6 +1,7 @@
 package format
 
 import (
+	"fmt"
 	"io"
 	"os"
 )
@@ -30,11 +31,16 @@ func (h *HackRobot) Info(format string, args ...interface{}) {
 }
 
 // Start starts progress spinner and shows message with emoji.
-func (h *HackRobot) Start(msg string) {
-	h.Progress.StartWithEmojiMsg(msg)
+func (h *HackRobot) Start(format string, args ...interface{}) {
+	h.Progress.StartWithEmojiMsg(fmt.Sprintf(format, args...))
 }
 
 // End finalize robot and progress.
 func (h *HackRobot) End() {
 	h.Progress.End(true)
+}
+
+// Error stop progress and set error result.
+func (h *HackRobot) Error() {
+	h.Progress.End(false)
 }
