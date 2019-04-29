@@ -138,7 +138,7 @@ func showOutputDiff(got, want string) {
 		}
 	}
 	if gn > len(wantL) {
-		for i := len(wantL) - 1; i < gn; i++ {
+		for i := len(wantL); i < gn; i++ {
 			fmt.Printf("%v\n", aurora.Red(gotL[i]))
 		}
 	}
