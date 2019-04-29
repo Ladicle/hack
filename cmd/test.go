@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os/exec"
@@ -74,6 +75,9 @@ func runTest(timeout time.Duration) error {
 	sids, err := util.SampleIDs(".")
 	if err != nil {
 		return err
+	}
+	if len(sids) == 0 {
+		return errors.New("There is no sample inputs.")
 	}
 
 	var was []Result
