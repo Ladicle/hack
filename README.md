@@ -24,13 +24,12 @@ Usage:
   hack [command]
 
 Available Commands:
-  copy        Copy main program to clipboard
+  set         Switch contest current contest
   get         get contests
-  help        Help about any command
   init        Initialize workspace for the contest
   jump        Get current quiz directory
-  set         Switch contest current contest
   test        Test main program
+  copy        Copy main program to clipboard
   version     Show this command version
 
 Flags:
@@ -45,4 +44,77 @@ Flags:
       --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
 
 Use "hack [command] --help" for more information about a command.
+```
+
+## Quick Started
+
+Set the next contest to work on.
+
+```
+$ hack set atcoder/abc100
+🤖 < OK! I set "atcoder/abc100" for the next contest
+```
+
+Jump to the contest root directory.
+
+```
+$ cd (hack jump)
+```
+
+Initialize the current contest.
+
+```
+$ hack init
+🤖 < Sure! I'll setup environment for "abc100" contest.
+
+ ✓ Scraping abc100 quizzes 🔎
+ ✓ Creating 4 quiz directories 📦
+ ✓ Scraping abc100_a quizzes 📥
+ ✓ Scraping sample #1 📝
+ ✓ Scraping sample #2 📝
+ ✓ Scraping sample #3 📝
+ ✓ Scraping sample #3 📝
+ ✓ Scraping abc100_b quizzes 📥
+ ✓ Scraping sample #1 📝
+ ✓ Scraping sample #2 📝
+ ✓ Scraping sample #3 📝
+ ✓ Scraping sample #3 📝
+ ✓ Scraping abc100_c quizzes 📥
+ ✓ Scraping sample #1 📝
+ ✓ Scraping sample #2 📝
+ ✓ Scraping sample #3 📝
+ ✓ Scraping sample #4 📝
+ ✓ Scraping sample #4 📝
+ ✓ Scraping abc100_d quizzes 📥
+ ✓ Scraping sample #1 📝
+ ✓ Scraping sample #2 📝
+ ✓ Scraping sample #3 📝
+ ✓ Scraping sample #4 📝
+```
+
+Go to the first quiz directory.
+
+```
+$ cd (hack j)
+```
+
+Let's programming!
+
+```
+$ emacs main.cpp
+```
+
+After writing the code, test it.
+
+```
+$ hack test
+[AC] Sample #1
+[AC] Sample #2
+[AC] Sample #3
+```
+
+There is no problem, copy and submit it :)
+
+```
+$ hack copy
 ```
