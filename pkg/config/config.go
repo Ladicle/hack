@@ -1,7 +1,10 @@
 package config
 
 import (
+	"fmt"
+	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -9,13 +12,15 @@ import (
 )
 
 const (
-	DefaultConfig  = ".hack.yaml"
+	DefaultConfig  = ".hack/config.yaml"
 	DefaultBaseDir = "contest"
 
-	baseDirKey     = "BaseDir"
-	currentKey     = "Current"
-	atCoderUserKey = "AtCoderUser"
-	atCoderPassKey = "AtCoderPass"
+	baseDirKey        = "BaseDir"
+	currentKey        = "Current"
+	atCoderAccountKey = "AtCoderAccountKey"
+	atCoderUserKey    = "AtCoderUser"
+	atCoderPassKey    = "AtCoderPass"
+	defaultLangKey    = "lang"
 )
 
 func Load(overwriteCfg string) error {
@@ -31,6 +36,9 @@ func Load(overwriteCfg string) error {
 }
 
 func Save() error {
+	if err := os.MkdirAll(path.Base(viper.ConfigFileUsed()), 0775); err != nil {
+		return err
+	}
 	return viper.WriteConfig()
 }
 
@@ -69,17 +77,21 @@ func SetCurrentQuizPath(quiz string) string {
 }
 
 func AtCoderUser() string {
-	return viper.GetString(atCoderUserKey)
+	return viper.GetString(fmt.Sprintf("%v.username", atCoderAccountKey))
 }
 
-func SetAtCoderUser(user string) {
-	viper.Set(atCoderUserKey, user)
+func SetAtCoderAccount(account *Account) {
+	viper.Set(atCoderAccountKey, account)
 }
 
 func AtCoderPass() string {
-	return viper.GetString(atCoderPassKey)
+	return viper.GetString(fmt.Sprintf("%v.password", atCoderAccountKey))
 }
 
-func SetAtCoderPass(pass string) {
-	viper.Set(atCoderPassKey, pass)
+func SetDefaultLang(lang string) {
+	viper.Set(defaultLangKey, lang)
+}
+
+func DefaultLang() string {
+	return viper.GetString(defaultLangKey)
 }

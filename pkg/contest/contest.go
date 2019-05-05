@@ -13,7 +13,7 @@ import (
 
 const (
 	filePerm = 0644
-	dirPerm  = 0755
+	dirPerm  = 0775
 
 	HostAtCoder = "atcoder"
 	HostCodeJam = "codejam"
