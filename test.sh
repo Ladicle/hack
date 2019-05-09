@@ -69,6 +69,13 @@ echo "## Quiz initialization"
 rm * || :
 hack i
 ls
+echo "## Submit"
+cat <<EOF > main.go
+package main
+import "fmt"
+func main() {fmt.Println("one\ntwo\nthree")}
+EOF
+hack sub
 cd $HOME
 rm -r ~/contest/atcoder/abc100
 
@@ -79,7 +86,7 @@ echo "## Jump to the contest directory"
 cd `hack j`
 pwd
 echo "## CodeJam initialization"
-hack i
+hack i || :
 ls
 echo "## Jump to the quiz directory"
 cd `hack j`

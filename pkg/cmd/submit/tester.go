@@ -1,4 +1,4 @@
-package cmd
+package submit
 
 import (
 	"context"
@@ -9,41 +9,26 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Ladicle/hack/pkg/format"
 	"github.com/Ladicle/hack/pkg/lang"
 	"github.com/Ladicle/hack/pkg/util"
 	"github.com/logrusorgru/aurora"
-	"github.com/spf13/cobra"
 )
 
-func NewTestCmd() *cobra.Command {
-	var timeout time.Duration
-
-	c := cobra.Command{
-		Use:     "test",
-		Aliases: []string{"t"},
-		Short:   "Test main program",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runTest(timeout)
-		},
-		SilenceUsage: true,
-	}
-
-	c.Flags().DurationVarP(&timeout, "timeout", "t", 2*time.Second,
-		"Set execution time-limit")
-	return &c
-}
-
-type Result struct {
+type TestResult struct {
 	Attempt  string
 	SampleID string
 	Want     string
 	Got      string
 }
 
-func runTest(timeout time.Duration) error {
+func runTest(timeout time.Duration, hr *format.HackRobot) error {
 	fname, err := util.GetProgName()
 	if err != nil {
 		return err
+	}
+	if fname == "" {
+		hr.Fatal("Not found the %v program in this directory.", "main.[go|cpp]")
 	}
 
 	// Compile the main program
@@ -80,7 +65,7 @@ func runTest(timeout time.Duration) error {
 		return errors.New("There is no sample inputs.")
 	}
 
-	var was []Result
+	var was []TestResult
 	for _, id := range sids {
 		// Run program
 		outf, err := tester.Run(id, timeout)
@@ -109,7 +94,7 @@ func runTest(timeout time.Duration) error {
 			continue
 		}
 		fmt.Printf("[%v] Sample #%v\n", aurora.Red("WA").Bold(), id)
-		was = append(was, Result{
+		was = append(was, TestResult{
 			SampleID: id,
 			Attempt:  outf,
 			Got:      got,

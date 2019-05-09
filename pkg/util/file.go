@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -24,8 +23,7 @@ func GetProgName() (string, error) {
 			return f.Name(), nil
 		}
 	}
-
-	return fname, fmt.Errorf("not found a main program")
+	return "", nil
 }
 
 func SampleIDs(dir string) ([]string, error) {
