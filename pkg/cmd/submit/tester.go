@@ -12,8 +12,10 @@ import (
 	"github.com/Ladicle/hack/pkg/format"
 	"github.com/Ladicle/hack/pkg/lang"
 	"github.com/Ladicle/hack/pkg/util"
-	"github.com/logrusorgru/aurora"
+	"github.com/golang/glog"
 )
+
+const testTool = "testing_tool.py"
 
 type TestResult struct {
 	Attempt  string
@@ -34,7 +36,7 @@ func runTest(timeout time.Duration, hr *format.HackRobot) error {
 	// Compile the main program
 	tester := lang.GetTester(fname)
 	if err := tester.Compile(); err != nil {
-		fmt.Printf("[%v] %v\n", aurora.Red("CE").Bold(), fname)
+		hr.State(format.StateCompileError, fname)
 		return err
 	}
 
@@ -43,18 +45,19 @@ func runTest(timeout time.Duration, hr *format.HackRobot) error {
 		return err
 	}
 	for _, f := range fs {
-		if f.Name() == "testing_tool.py" {
-			cmd := exec.Command("python", "testing_tool.py", "./solution")
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				fmt.Printf("[%v] testing_tool.py\n", aurora.Red("WA").Bold())
-				fmt.Printf("\nDetail:\n%v", string(out))
-				return err
-			}
-			fmt.Printf("[%v] testing_tool.py\n",
-				aurora.Green("AC").Bold())
-			return nil
+		if f.Name() != testTool {
+			continue
 		}
+
+		cmd := exec.Command("python", "testing_tool.py", "./solution")
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			hr.State(format.StateWrongAnswer, testTool)
+			glog.Error(string(out))
+			return err
+		}
+		hr.State(format.StateAnswerIsCorrect, testTool)
+		return nil
 	}
 
 	sids, err := util.SampleIDs(".")
@@ -67,16 +70,16 @@ func runTest(timeout time.Duration, hr *format.HackRobot) error {
 
 	var was []TestResult
 	for _, id := range sids {
+		sampleName := fmt.Sprintf("Sample #%v", id)
+
 		// Run program
 		outf, err := tester.Run(id, timeout)
 		if err != nil {
 			if err == context.DeadlineExceeded {
-				fmt.Printf("[%v] Sample #%v\n",
-					aurora.Yellow("TLE").Bold(), id)
+				hr.State(format.StateTimeLimitExceeded, sampleName)
 				continue
 			}
-			fmt.Printf("[%v] Sample #%v\n",
-				aurora.Red("RTE").Bold(), id)
+			hr.State(format.StateAnswerIsCorrect, sampleName)
 			return err
 		}
 
@@ -85,15 +88,17 @@ func runTest(timeout time.Duration, hr *format.HackRobot) error {
 		if err != nil {
 			return err
 		}
+
 		bwant, err := ioutil.ReadFile(fmt.Sprintf("%v.out", id))
 		got, want := strings.TrimSuffix(string(bgot), "\n"),
 			strings.TrimSuffix(string(bwant), "\n")
+
 		if got == want {
-			fmt.Printf("[%v] Sample #%v\n",
-				aurora.Green("AC").Bold(), id)
+			hr.State(format.StateAnswerIsCorrect, sampleName)
 			continue
 		}
-		fmt.Printf("[%v] Sample #%v\n", aurora.Red("WA").Bold(), id)
+		hr.State(format.StateWrongAnswer, sampleName)
+
 		was = append(was, TestResult{
 			SampleID: id,
 			Attempt:  outf,
@@ -104,35 +109,8 @@ func runTest(timeout time.Duration, hr *format.HackRobot) error {
 
 	// Show detail
 	for _, wa := range was {
-		fmt.Printf("\nCompare %v.out and %v\n", wa.SampleID, wa.Attempt)
-		showOutputDiff(wa.Got, wa.Want)
+		hr.Printfln("\nCompare %v.out and %v", wa.SampleID, wa.Attempt)
+		hr.PrettyDiff(wa.Got, wa.Want)
 	}
 	return nil
-}
-
-func showOutputDiff(got, want string) {
-	gotL := strings.Split(got, "\n")
-	wantL := strings.Split(want, "\n")
-	gn := len(gotL)
-
-	for i, w := range wantL {
-		if i >= gn {
-			prettyPrintDiff("<empty>", w)
-			continue
-		}
-		if w == gotL[i] {
-			fmt.Println(w)
-		} else {
-			prettyPrintDiff(gotL[i], w)
-		}
-	}
-	if gn > len(wantL) {
-		for i := len(wantL); i < gn; i++ {
-			fmt.Printf("%v\n", aurora.Red(gotL[i]))
-		}
-	}
-}
-
-func prettyPrintDiff(got, want string) {
-	fmt.Printf("%v\n%v\n", aurora.Red(got), aurora.Green(want))
 }
