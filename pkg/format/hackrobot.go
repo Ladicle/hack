@@ -82,7 +82,7 @@ func (h *HackRobot) State(state, msg string) {
 	default:
 		v = aurora.Red(state)
 	}
-	h.Robot.PrintlnYellow("[%v] %v", v, msg)
+	fmt.Fprintf(h.out, "[%v] %v\n", v, msg)
 }
 
 // Start starts progress spinner and shows message with emoji.

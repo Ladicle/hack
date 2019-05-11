@@ -1,7 +1,6 @@
 package submit
 
 import (
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/Ladicle/hack/pkg/contest"
 	"github.com/Ladicle/hack/pkg/format"
 	"github.com/Ladicle/hack/pkg/util"
-	"github.com/atotto/clipboard"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 )
@@ -38,40 +36,35 @@ func (cfg *submitConig) run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		glog.Fatal(err)
 	}
-	if _, err := contest.CurrentQuizID(wd); err != nil {
+	quizID, err := contest.CurrentQuizID(wd)
+	if err != nil {
 		cfg.Fatal("Not in the contest directory.")
 	}
 
-	if err := runTest(cfg.TimeLimit, cfg.HackRobot); err != nil {
+	sourceFile, err := util.GetProgName()
+	if err != nil {
+		glog.Fatal(err)
+	}
+	if sourceFile == "" {
+		cfg.Fatal("Not found the %v program in this directory.", "main.[go|cpp]")
+	}
+
+	s := NewSolution(quizID, sourceFile, cfg.HackRobot)
+	if err := s.Test(cfg.TimeLimit); err != nil {
 		glog.Fatal(err)
 	}
 
+	cfg.Printfln("")
 	if config.CurrentHost() == contest.HostAtCoder {
-		// submit
-	} else {
-		if err := copyProgram(cfg.HackRobot); err != nil {
+		if err := s.Submit(); err != nil {
 			glog.Fatal(err)
 		}
+		if err := s.Open(); err != nil {
+			glog.Fatal(err)
+		}
+		return
 	}
-}
-
-func copyProgram(hr *format.HackRobot) error {
-	fname, err := util.GetProgName()
-	if err != nil {
-		return err
+	if err := s.Copy(); err != nil {
+		glog.Fatal(err)
 	}
-	if fname == "" {
-		hr.Fatal("Not found the %v program in this directory.", "main.[go|cpp]")
-	}
-
-	code, err := ioutil.ReadFile(fname)
-	if err != nil {
-		return err
-	}
-
-	if err := clipboard.WriteAll(string(code)); err != nil {
-		return err
-	}
-	hr.Info("\nCopy %q to the clipboard.", fname)
-	return nil
 }

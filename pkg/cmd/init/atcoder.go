@@ -14,12 +14,16 @@ type atCoderInitializer struct {
 	*format.HackRobot
 }
 
-func newAtCoderInitializer(hb *format.HackRobot, cid string) *atCoderInitializer {
+func newAtCoderInitializer(hb *format.HackRobot, cid string) (*atCoderInitializer, error) {
+	at, err := contest.NewAtCoder(cid)
+	if err != nil {
+		return nil, err
+	}
 	return &atCoderInitializer{
 		HackRobot: hb,
 		cID:       cid,
-		at:        contest.NewAtCoder(cid),
-	}
+		at:        at,
+	}, nil
 }
 
 func (ai *atCoderInitializer) initAtCoderContest() error {

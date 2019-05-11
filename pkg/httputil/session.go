@@ -1,50 +1,54 @@
 package httputil
 
 import (
-	"io"
+	"crypto/tls"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
+
+	"github.com/golang/glog"
+	"golang.org/x/net/publicsuffix"
 )
 
 type Session struct {
-	Cookies []*http.Cookie
+	client *http.Client
 }
 
-func (s *Session) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, body)
+func NewSession(serverName string) (*Session, error) {
+	jar, err := cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
 	if err != nil {
 		return nil, err
 	}
-	for _, c := range s.Cookies {
-		req.AddCookie(c)
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			ServerName: serverName,
+		},
 	}
-	return req, nil
-}
-
-func (s *Session) Do(req *http.Request) (*http.Response, error) {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+	client := &http.Client{
+		Jar:       jar,
+		Transport: tr,
 	}
-	s.Cookies = resp.Cookies()
-	return resp, nil
+	return &Session{client: client}, nil
 }
 
 func (s *Session) Get(url string) (*http.Response, error) {
-	req, err := s.NewRequest("GET", url, nil)
+	glog.V(4).Infof("Get %v", url)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	return s.Do(req)
+	return s.client.Do(req)
 }
 
 func (s *Session) PostForm(url string, v *url.Values) (*http.Response, error) {
-	req, err := s.NewRequest("POST", url, strings.NewReader(v.Encode()))
+	glog.V(4).Infof("Post %v to %v", v, url)
+	req, err := http.NewRequest("POST", url, strings.NewReader(v.Encode()))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	return s.Do(req)
+	return s.client.Do(req)
 }

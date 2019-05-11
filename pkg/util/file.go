@@ -42,3 +42,25 @@ func SampleIDs(dir string) ([]string, error) {
 	}
 	return samples, nil
 }
+
+func InDir(name string) (bool, error) {
+	fs, err := ioutil.ReadDir(".")
+	if err != nil {
+		return false, err
+	}
+	for _, f := range fs {
+		if f.Name() == name {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// CleanRead read file and trim end of blank line.
+func CleanRead(name string) (string, error) {
+	b, err := ioutil.ReadFile(name)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSuffix(string(b), "\n"), nil
+}

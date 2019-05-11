@@ -51,7 +51,10 @@ func (ic *initConfig) run(cmd *cobra.Command, args []string) {
 func (ic *initConfig) initContest(host string) {
 	switch host {
 	case contest.HostAtCoder:
-		at := newAtCoderInitializer(ic.HackRobot, config.CurrentContestID())
+		at, err := newAtCoderInitializer(ic.HackRobot, config.CurrentContestID())
+		if err != nil {
+			glog.Fatal(err)
+		}
 		if err := at.initAtCoderContest(); err != nil {
 			glog.Fatal(err)
 		}
@@ -87,7 +90,10 @@ func (ic *initConfig) initContest(host string) {
 func (ic *initConfig) initQuiz(host, quiz string) {
 	switch host {
 	case contest.HostAtCoder:
-		at := newAtCoderInitializer(ic.HackRobot, config.CurrentContestID())
+		at, err := newAtCoderInitializer(ic.HackRobot, config.CurrentContestID())
+		if err != nil {
+			glog.Fatal(err)
+		}
 		if err := at.createSamples(quiz); err != nil {
 			glog.Fatal(err)
 		}

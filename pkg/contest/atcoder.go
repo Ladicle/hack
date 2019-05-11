@@ -1,14 +1,19 @@
 package contest
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/httputil"
+	"github.com/Ladicle/hack/pkg/lang"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/golang/glog"
 )
@@ -17,40 +22,64 @@ const (
 	atCoderBaseURL  = "https://atcoder.jp/contests"
 	atCoderLoginURL = "https://atcoder.jp/login"
 
-	atCoderQuizPath = "tasks"
+	atCoderQuizPath      = "tasks"
+	atCoderSubmitPath    = "submit"
+	atCoderSubmittedPath = "submissions/me"
 )
 
-func NewAtCoder(id string) *AtCoder {
+func NewAtCoder(id string) (*AtCoder, error) {
+	s, err := httputil.NewSession("atcoder.jp")
+	if err != nil {
+		return nil, err
+	}
 	return &AtCoder{
 		ContestID: id,
-		Session:   &httputil.Session{},
-	}
+		session:   s,
+	}, nil
 }
 
 type AtCoder struct {
 	ContestID string
-	Session   *httputil.Session
+
+	session   *httputil.Session
+	csrfToken string
 }
 
-func (a AtCoder) QuizzesURL() string {
+func (a *AtCoder) QuizzesURL() string {
 	u, _ := url.Parse(atCoderBaseURL)
 	u.Path = path.Join(u.Path, a.ContestID, atCoderQuizPath)
 	return u.String()
 }
 
-func (a AtCoder) QuizURL(quizID string) string {
+func (a *AtCoder) QuizURL(quizID string) string {
 	u, _ := url.Parse(a.QuizzesURL())
 	u.Path = path.Join(u.Path, quizID)
 	return u.String()
 }
 
-func (a AtCoder) getCsrfToken(url string) (string, error) {
+func (a *AtCoder) SubmitURL() string {
+	u, _ := url.Parse(atCoderBaseURL)
+	u.Path = path.Join(u.Path, a.ContestID, atCoderSubmitPath)
+	return u.String()
+}
+
+func (a *AtCoder) SubmittedURL() string {
+	u, _ := url.Parse(atCoderBaseURL)
+	u.Path = path.Join(u.Path, a.ContestID, atCoderSubmittedPath)
+	return u.String()
+}
+
+func (a *AtCoder) getCsrfToken(url string) (string, error) {
 	glog.V(4).Infof("Getting csrfToken from %v...", url)
-	resp, err := a.Session.Get(url)
+	resp, err := a.session.Get(url)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
+	}
 
 	doc, err := goquery.NewDocumentFromResponse(resp)
 	if err != nil {
@@ -72,17 +101,13 @@ func (a AtCoder) getCsrfToken(url string) (string, error) {
 	return csrfToken, nil
 }
 
-func (a AtCoder) Login() error {
-	if a.Session.Cookies != nil {
-		glog.V(4).Info("Already logind to the AtCoder")
-		return nil
-	}
-
+func (a *AtCoder) Login() error {
 	glog.V(4).Info("Getting HTTP session...")
 	csrfToken, err := a.getCsrfToken(atCoderLoginURL)
 	if err != nil {
 		return err
 	}
+	a.csrfToken = csrfToken
 
 	values := url.Values{}
 	values.Add("username", config.AtCoderUser())
@@ -90,29 +115,63 @@ func (a AtCoder) Login() error {
 	values.Add("csrf_token", csrfToken)
 
 	glog.V(4).Infof("Login to the AtCoder as %q...", config.AtCoderUser())
-	resp, err := a.Session.PostForm(atCoderLoginURL, &values)
+	resp, err := a.session.PostForm(atCoderLoginURL, &values)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
+	}
+
 	glog.V(4).Info("Login succeeded")
 	return nil
 }
 
-func (a AtCoder) loginAndGet(url string) (*http.Response, error) {
+func (a *AtCoder) loginAndGet(url string) (*http.Response, error) {
 	if err := a.Login(); err != nil {
 		return nil, err
 	}
 	glog.V(4).Infof("Getting %v...", url)
-	resp, err := a.Session.Get(url)
+	resp, err := a.session.Get(url)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
 	}
 	return resp, nil
 }
 
-func (a AtCoder) ScrapeQuizzes() ([]string, error) {
+func (a *AtCoder) loginAndPost(URL string, values *url.Values) (*http.Response, error) {
+	if err := a.Login(); err != nil {
+		return nil, err
+	}
+
+	csrfToken, err := a.getCsrfToken(URL)
+	if err != nil {
+		return nil, err
+	}
+	if csrfToken == "" {
+		return nil, errors.New("csrfToken is null")
+	}
+	values.Add("csrf_token", csrfToken)
+
+	glog.V(4).Infof("Posting %v...", URL)
+	resp, err := a.session.PostForm(URL, values)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
+	}
+	return resp, nil
+}
+
+func (a *AtCoder) ScrapeQuizzes() ([]string, error) {
 	resp, err := a.loginAndGet(a.QuizzesURL())
 	if err != nil {
 		return nil, err
@@ -148,7 +207,7 @@ func (a AtCoder) ScrapeQuizzes() ([]string, error) {
 	return quizzes, nil
 }
 
-func (a AtCoder) ScrapeSample(quizID string) ([]*Sample, error) {
+func (a *AtCoder) ScrapeSample(quizID string) ([]*Sample, error) {
 	resp, err := a.loginAndGet(a.QuizURL(quizID))
 	if err != nil {
 		return nil, err
@@ -182,4 +241,43 @@ func (a AtCoder) ScrapeSample(quizID string) ([]*Sample, error) {
 	}
 	glog.V(4).Info("Success to scrape samples")
 	return ss, nil
+}
+
+func (a *AtCoder) SubmitCode(quizID, sorceFile string) error {
+	code, err := ioutil.ReadFile(sorceFile)
+	if err != nil {
+		return err
+	}
+	ext := filepath.Ext(sorceFile)
+	langId, err := ext2LangId(ext)
+	if err != nil {
+		return err
+	}
+	values := url.Values{}
+	values.Add("data.TaskScreenName", quizID)
+	values.Add("data.LanguageId", langId)
+	values.Add("sourceCode", string(code))
+
+	glog.V(4).Infof("Submit %q solution to the AtCoder...", quizID)
+	resp, err := a.loginAndPost(a.SubmitURL(), &values)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	glog.V(4).Infof("Success to submit code: %v", buf.String())
+
+	return nil
+}
+
+func ext2LangId(ext string) (string, error) {
+	switch ext {
+	case lang.TypeCpp:
+		return "3003", nil
+	case lang.TypeGo:
+		return "3013", nil
+	}
+	return "", fmt.Errorf("%q is not supported", ext)
 }

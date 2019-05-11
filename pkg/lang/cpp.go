@@ -12,7 +12,7 @@ type CppTester struct {
 
 func (t *CppTester) Compile() error {
 	c := exec.Command("g++", t.ProgName, "-std=c++14",
-		"-pthread", "-o", binaryName)
+		"-pthread", "-o", ExeBinary)
 	if out, err := c.CombinedOutput(); err != nil {
 		return fmt.Errorf("%v - %v", err.Error(), string(out))
 	}

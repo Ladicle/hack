@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/golang/glog"
 	"github.com/spf13/viper"
 )
 
@@ -36,7 +36,10 @@ func Load(overwriteCfg string) error {
 }
 
 func Save() error {
-	if err := os.MkdirAll(path.Base(viper.ConfigFileUsed()), 0775); err != nil {
+	glog.V(4).Infof("Use config file is %v", viper.ConfigFileUsed())
+	baseDir := filepath.Dir(viper.ConfigFileUsed())
+	glog.V(4).Infof("Create %v directory for the configuration", baseDir)
+	if err := os.MkdirAll(baseDir, 0775); err != nil && !os.IsExist(err) {
 		return err
 	}
 	return viper.WriteConfig()
