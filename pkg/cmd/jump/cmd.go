@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
 	"github.com/Ladicle/hack/pkg/format"
 	"github.com/Ladicle/hack/pkg/util"
 	"github.com/golang/glog"
+	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +22,18 @@ func NewCommand() *cobra.Command {
 		Aliases: []string{"j"},
 		Short:   "Get current quiz directory",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(getPath(args))
+			path := getPath(args)
+			fmt.Println(path)
+			if config.CurrentHost() == contest.HostAtCoder {
+				base := filepath.Base(path)
+				at, err := contest.NewAtCoder(config.CurrentContestID())
+				if err != nil {
+					glog.Fatal(err)
+				}
+				if err := open.Run(at.QuizURL(base)); err != nil {
+					glog.Fatal(err)
+				}
+			}
 		},
 	}
 }
