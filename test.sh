@@ -18,23 +18,6 @@ echo "## no argument"
 hack s || :
 echo "## Invalid argument"
 hack s atcoder || :
-echo "## Normal setting"
-hack s atcoder/abc123
-
-echo; echo "# Test jump"
-pwd
-echo "## Jump from the outside quiz directory"
-cd `hack j`
-pwd
-echo "## Jump to next quiz directory"
-cd `hack j`
-pwd
-echo "## Jump to specified directory"
-cd `hack j abc123_d`
-pwd
-echo "## No Jump from the last directory"
-cd `hack j`
-pwd
 
 echo; echo "# Test set command2"
 echo "## New setting"
@@ -76,6 +59,14 @@ import "fmt"
 func main() {fmt.Println("one\ntwo\nthree")}
 EOF
 hack sub
+
+echo "## Jump to specified directory"
+cd `hack j abc100_d`
+pwd
+echo "## No Jump from the last directory"
+cd `hack j`
+pwd
+
 cd $HOME
 rm -r ~/contest/atcoder/abc100
 

@@ -11,7 +11,7 @@ type GoTester struct {
 }
 
 func (t *GoTester) Compile() error {
-	c := exec.Command("go", "build", "-o", binaryName, t.ProgName)
+	c := exec.Command("go", "build", "-o", ExeBinary, t.ProgName)
 	if out, err := c.CombinedOutput(); err != nil {
 		return fmt.Errorf("%v - %v", err.Error(), string(out))
 	}

@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	typeCpp = ".cpp"
-	typeGo  = ".go"
+	TypeCpp = ".cpp"
+	TypeGo  = ".go"
 
-	binaryName = "solution"
+	ExeBinary = "solution"
 )
 
 // Tester is a interface for testing programs.
@@ -25,9 +25,9 @@ type Tester interface {
 
 func GetTester(fileName string) Tester {
 	switch {
-	case strings.HasSuffix(fileName, typeCpp):
+	case strings.HasSuffix(fileName, TypeCpp):
 		return &CppTester{ProgName: fileName}
-	case strings.HasSuffix(fileName, typeGo):
+	case strings.HasSuffix(fileName, TypeGo):
 		return &GoTester{ProgName: fileName}
 	}
 	return nil
@@ -38,7 +38,7 @@ func runBinary(sampleID string, timeout time.Duration) (string, error) {
 	defer cancel()
 
 	var errout bytes.Buffer
-	c := exec.CommandContext(ctx, fmt.Sprintf("./%v", binaryName))
+	c := exec.CommandContext(ctx, fmt.Sprintf("./%v", ExeBinary))
 	c.Stderr = &errout
 
 	inf, err := os.Open(fmt.Sprintf("%v.in", sampleID))
