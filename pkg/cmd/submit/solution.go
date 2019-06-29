@@ -151,5 +151,8 @@ func (s *Solution) Test(limit time.Duration) error {
 		s.Printfln("\nCompare %v.out and %v", wa.SampleID, wa.Attempt)
 		s.PrettyDiff(wa.Got, wa.Want)
 	}
+	if len(was) > 0 {
+		return fmt.Errorf("test is failed")
+	}
 	return nil
 }

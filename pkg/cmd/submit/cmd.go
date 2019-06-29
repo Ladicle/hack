@@ -62,7 +62,6 @@ func (cfg *submitConig) run(cmd *cobra.Command, args []string) {
 		if err := s.Open(); err != nil {
 			glog.Fatal(err)
 		}
-		return
 	}
 	if err := s.Copy(); err != nil {
 		glog.Fatal(err)
