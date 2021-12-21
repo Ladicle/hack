@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/kyokomi/emoji"
-	"github.com/logrusorgru/aurora"
+	"github.com/kyokomi/emoji/v2"
+	"github.com/logrusorgru/aurora/v3"
 )
 
 type Progress struct {

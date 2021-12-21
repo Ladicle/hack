@@ -1,32 +1,36 @@
 module github.com/Ladicle/hack
 
-go 1.12
+go 1.17
 
 require (
-	github.com/PuerkitoBio/goquery v1.5.0
-	github.com/VividCortex/gohistogram v1.0.0 // indirect
-	github.com/apache/thrift v0.12.0 // indirect
-	github.com/atotto/clipboard v0.1.2
-	github.com/go-kit/kit v0.8.0 // indirect
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/atotto/clipboard v0.1.4
+	github.com/golang/glog v1.0.0
+	github.com/kyokomi/emoji/v2 v2.2.8
+	github.com/logrusorgru/aurora/v3 v3.0.0
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
+	github.com/spf13/cobra v1.3.0
+	github.com/spf13/viper v1.10.0
+	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
+	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f
+)
+
+require (
+	github.com/andybalholm/cascadia v1.3.1 // indirect
+	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jaegertracing/jaeger v1.11.0 // indirect
-	github.com/kyokomi/emoji v2.1.0+incompatible
-	github.com/logrusorgru/aurora v0.0.0-20190417130405-e50442bb4cb5
-	github.com/opentracing-contrib/go-stdlib v0.0.0-20190324214902-3020fec0e66b // indirect
-	github.com/opentracing/opentracing-go v1.1.0 // indirect
-	github.com/pkg/errors v0.8.1 // indirect
-	github.com/prometheus/client_golang v0.9.2 // indirect
-	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/spf13/cobra v0.0.3
-	github.com/spf13/viper v1.3.2
-	github.com/uber-go/atomic v1.3.2 // indirect
-	github.com/uber/jaeger-client-go v2.16.0+incompatible // indirect
-	github.com/uber/jaeger-lib v2.0.0+incompatible // indirect
-	github.com/uber/tchannel-go v1.13.0 // indirect
-	go.uber.org/atomic v1.3.2 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.9.1 // indirect
-	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
-	golang.org/x/net v0.0.0-20181201002055-351d144fa1fc
+	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/mitchellh/mapstructure v1.4.3 // indirect
+	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/spf13/afero v1.6.0 // indirect
+	github.com/spf13/cast v1.4.1 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/subosito/gotenv v1.2.0 // indirect
+	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
+	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/ini.v1 v1.66.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
