@@ -14,7 +14,7 @@
 ## Installation
 
 ```bash
-go get -u github.com/Ladicle/hack 
+go get -u github.com/Ladicle/hack
 ```
 
 ## Usage
