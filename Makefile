@@ -1,39 +1,47 @@
-REPO_NAME=hack
+# The root package
 PKGROOT=github.com/Ladicle/hack
 
 # VERSION is the git commit hash.
 VERSION ?= $(shell git rev-parse --short HEAD)
 
-UNAME_S := $(shell uname -s)
-UNAME_M := $(shell uname -m)
-ifeq (${UNAME_S},Linux)
-	OS=linux
-endif
-ifeq (${UNAME_S},Darwin)
-	OS=darwin
-endif
-ifeq (${UNAME_M},x86_64)
-	ARCH=amd64
-endif
+# OUTDIR is directory where artifacts are stored.
+# This must be a relative to PKGROOT.
+OUTDIR := build/out
 
-OUTDIR=_output
+# GOLDFLAGS is a flag used for a build command.
+GOLDFLAGS := -w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)
+
+
+.PHONY: build build-linux build-darwin build-windows install test vet lint fmt check clean
 
 build:
-	GO111MODULE=on CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack
+	CGO_ENABLED=0 go build -ldflags "$(GOLDFLAGS)" -o $(OUTDIR)/hack
 
-build_darwin64:
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack_darwin64
+build-linux:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$(GOLDFLAGS)" -o $(OUTDIR)/linux-amd64/hack
 
-build_linux64:
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)" -o $(OUTDIR)/hack_linux64
+build-darwin:
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "$(GOLDFLAGS)" -o $(OUTDIR)/darwin-amd64/hack
+
+build-windows:
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "$(GOLDFLAGS)" -o $(OUTDIR)/windows-amd64/hack.exe
 
 install:
-	GO111MODULE=on CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) go install -ldflags "-w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(REPO_NAME)"
+	CGO_ENABLED=0 go install -ldflags "$(GOLDFLAGS)"
 
-check:
-	GO111MODULE=on go vet $(PKGROOT)/...
-	GO111MODULE=on go test $(PKGROOT)/...
+test:
+	go test $(PKGROOT)/cmd/... $(PKGROOT)/pkg/...
 
-.PHONY: clean
+vet:
+	go vet -printfuncs Infof,Warningf,Errorf,Fatalf,Exitf,Logf $(PKGROOT)/cmd/... $(PKGROOT)/pkg/...
+
+lint:
+	hack/golangci-lint.sh
+
+fmt:
+	go fmt $(PKGROOT)/cmd/... $(PKGROOT)/pkg/...
+
+check: fmt vet lint test
+
 clean:
-	-rm -r $(OUTDIR)
+	-rm -rf $(OUTDIR)/*
