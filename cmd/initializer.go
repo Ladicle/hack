@@ -9,7 +9,7 @@ import (
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/golang/glog"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func askBaseDir() (string, error) {
@@ -40,7 +40,7 @@ func initAtCoder() (*config.Account, error) {
 	fmt.Printf("## Tell me the username.\n-> ")
 	fmt.Scanln(&user)
 	fmt.Printf("## Tell me the password.\n-> ")
-	bpass, err := terminal.ReadPassword(int(syscall.Stdin))
+	bpass, err := term.ReadPassword(syscall.Stdin)
 	if err != nil {
 		return nil, err
 	}

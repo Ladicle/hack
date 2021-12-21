@@ -5,16 +5,23 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/golang/glog"
+	"github.com/kyokomi/emoji/v2"
+	"github.com/spf13/cobra"
+
 	getcmd "github.com/Ladicle/hack/pkg/cmd/get"
 	initcmd "github.com/Ladicle/hack/pkg/cmd/init"
 	jumpcmd "github.com/Ladicle/hack/pkg/cmd/jump"
 	setcmd "github.com/Ladicle/hack/pkg/cmd/set"
 	smtcmd "github.com/Ladicle/hack/pkg/cmd/submit"
 	"github.com/Ladicle/hack/pkg/config"
-	"github.com/golang/glog"
-	"github.com/kyokomi/emoji"
-	"github.com/spf13/cobra"
 )
+
+const welcomeMsg = `Welcome to the Hack!:tada:
+
+:robot:< I'm a hack bot!
+   < Before start hacking, please answer some questions.
+`
 
 var (
 	gitRepo string
@@ -63,8 +70,7 @@ func initConfig() {
 	}
 
 	// set defaults at first time
-	emoji.Println("Welcome to the Hack!:tada:\n\n:robot:< I'm a hack bot!\n",
-		"   < Before start hacking, please answer some questions.\n")
+	emoji.Println(welcomeMsg)
 
 	dir, err := askBaseDir()
 	if err != nil {

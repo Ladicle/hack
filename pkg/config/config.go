@@ -18,8 +18,6 @@ const (
 	baseDirKey        = "BaseDir"
 	currentKey        = "Current"
 	atCoderAccountKey = "AtCoderAccountKey"
-	atCoderUserKey    = "AtCoderUser"
-	atCoderPassKey    = "AtCoderPass"
 	defaultLangKey    = "lang"
 )
 

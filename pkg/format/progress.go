@@ -39,7 +39,6 @@ func (p *Progress) End(success bool) {
 	var icon aurora.Value
 	if success {
 		icon = aurora.Green("✓").Bold()
-
 	} else {
 		icon = aurora.Red("✗").Bold()
 	}

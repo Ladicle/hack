@@ -81,7 +81,7 @@ func (a *AtCoder) getCsrfToken(url string) (string, error) {
 		return "", fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
 	}
 
-	doc, err := goquery.NewDocumentFromResponse(resp)
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -179,7 +179,7 @@ func (a *AtCoder) ScrapeQuizzes() ([]string, error) {
 	defer resp.Body.Close()
 
 	glog.V(4).Infof("Scrapping quizzes from %v...", a.QuizzesURL())
-	doc, err := goquery.NewDocumentFromResponse(resp)
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (a *AtCoder) ScrapeSample(quizID string) ([]*Sample, error) {
 	defer resp.Body.Close()
 
 	glog.V(4).Infof("Scraping samples from %v...", a.QuizURL(quizID))
-	doc, err := goquery.NewDocumentFromResponse(resp)
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -249,13 +249,13 @@ func (a *AtCoder) SubmitCode(quizID, sorceFile string) error {
 		return err
 	}
 	ext := filepath.Ext(sorceFile)
-	langId, err := ext2LangId(ext)
+	langID, err := ext2LangID(ext)
 	if err != nil {
 		return err
 	}
 	values := url.Values{}
 	values.Add("data.TaskScreenName", quizID)
-	values.Add("data.LanguageId", langId)
+	values.Add("data.LanguageId", langID)
 	values.Add("sourceCode", string(code))
 
 	glog.V(4).Infof("Submit %q solution to the AtCoder...", quizID)
@@ -266,13 +266,15 @@ func (a *AtCoder) SubmitCode(quizID, sorceFile string) error {
 	defer resp.Body.Close()
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
+	if _, err := buf.ReadFrom(resp.Body); err != nil {
+		return err
+	}
 	glog.V(4).Infof("Success to submit code: %v", buf.String())
 
 	return nil
 }
 
-func ext2LangId(ext string) (string, error) {
+func ext2LangID(ext string) (string, error) {
 	switch ext {
 	case lang.TypeCpp:
 		return "3003", nil
