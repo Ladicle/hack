@@ -2,264 +2,161 @@ package contest
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"net/url"
-	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/Ladicle/hack/pkg/config"
+	"github.com/PuerkitoBio/goquery"
+
 	"github.com/Ladicle/hack/pkg/httputil"
 	"github.com/Ladicle/hack/pkg/lang"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/golang/glog"
 )
 
-const (
-	atCoderBaseURL  = "https://atcoder.jp/contests"
-	atCoderLoginURL = "https://atcoder.jp/login"
+const atCoderHost = "atcoder.jp"
 
-	atCoderQuizPath      = "tasks"
-	atCoderSubmitPath    = "submit"
-	atCoderSubmittedPath = "submissions/me"
-)
+type AtCoder struct {
+	ContestID string
 
-func NewAtCoder(id string) (*AtCoder, error) {
+	client *httputil.Session
+}
+
+// NewAtCoder creates and return the AtCoder object.
+func NewAtCoder(contestID string) (*AtCoder, error) {
 	s, err := httputil.NewSession("atcoder.jp")
 	if err != nil {
 		return nil, err
 	}
 	return &AtCoder{
-		ContestID: id,
-		session:   s,
+		ContestID: contestID,
+		client:    s,
 	}, nil
 }
 
-type AtCoder struct {
-	ContestID string
+func (a *AtCoder) Login(user, pass string) error {
+	addr := fmt.Sprintf("https://%v/login", atCoderHost)
+	csrfToken, err := a.getCsrfToken(addr)
+	if err != nil {
+		return err
+	}
 
-	session   *httputil.Session
-	csrfToken string
+	values := url.Values{}
+	values.Add("username", user)
+	values.Add("password", pass)
+	values.Add("csrf_token", csrfToken)
+
+	resp, err := a.client.PostForm(addr, &values)
+	if err != nil {
+		return err
+	}
+	return resp.Body.Close()
 }
 
-func (a *AtCoder) QuizzesURL() string {
-	u, _ := url.Parse(atCoderBaseURL)
-	u.Path = path.Join(u.Path, a.ContestID, atCoderQuizPath)
-	return u.String()
-}
-
-func (a *AtCoder) QuizURL(quizID string) string {
-	u, _ := url.Parse(a.QuizzesURL())
-	u.Path = path.Join(u.Path, quizID)
-	return u.String()
-}
-
-func (a *AtCoder) SubmitURL() string {
-	u, _ := url.Parse(atCoderBaseURL)
-	u.Path = path.Join(u.Path, a.ContestID, atCoderSubmitPath)
-	return u.String()
-}
-
-func (a *AtCoder) SubmittedURL() string {
-	u, _ := url.Parse(atCoderBaseURL)
-	u.Path = path.Join(u.Path, a.ContestID, atCoderSubmittedPath)
-	return u.String()
-}
-
-func (a *AtCoder) getCsrfToken(url string) (string, error) {
-	glog.V(4).Infof("Getting csrfToken from %v...", url)
-	resp, err := a.session.Get(url)
+func (a *AtCoder) getCsrfToken(addr string) (string, error) {
+	resp, err := a.client.Get(addr)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
-	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	glog.V(4).Info("Scrapping csrfToken from response...")
 	var csrfToken string
 	doc.Find("input[name=\"csrf_token\"]").Each(func(i int, s *goquery.Selection) {
-		value, exist := s.Attr("value")
-		if exist {
+		if value, exist := s.Attr("value"); exist {
 			csrfToken = value
 		}
 	})
 	if csrfToken == "" {
-		return "", fmt.Errorf("failed to scrape csrfToken from %v", url)
+		return "", fmt.Errorf("failed to scrape csrfToken from %#+v", doc)
 	}
-	glog.V(4).Info("Success to get csrfToken")
 	return csrfToken, nil
 }
 
-func (a *AtCoder) Login() error {
-	glog.V(4).Info("Getting HTTP session...")
-	csrfToken, err := a.getCsrfToken(atCoderLoginURL)
-	if err != nil {
-		return err
-	}
-	a.csrfToken = csrfToken
-
-	values := url.Values{}
-	values.Add("username", config.AtCoderUser())
-	values.Add("password", config.AtCoderPass())
-	values.Add("csrf_token", csrfToken)
-
-	glog.V(4).Infof("Login to the AtCoder as %q...", config.AtCoderUser())
-	resp, err := a.session.PostForm(atCoderLoginURL, &values)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
-	}
-
-	glog.V(4).Info("Login succeeded")
-	return nil
-}
-
-func (a *AtCoder) loginAndGet(url string) (*http.Response, error) {
-	if err := a.Login(); err != nil {
-		return nil, err
-	}
-	glog.V(4).Infof("Getting %v...", url)
-	resp, err := a.session.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
-		return nil, fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
-	}
-	return resp, nil
-}
-
-func (a *AtCoder) loginAndPost(URL string, values *url.Values) (*http.Response, error) {
-	if err := a.Login(); err != nil {
-		return nil, err
-	}
-
-	csrfToken, err := a.getCsrfToken(URL)
-	if err != nil {
-		return nil, err
-	}
-	if csrfToken == "" {
-		return nil, errors.New("csrfToken is null")
-	}
-	values.Add("csrf_token", csrfToken)
-
-	glog.V(4).Infof("Posting %v...", URL)
-	resp, err := a.session.PostForm(URL, values)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
-		return nil, fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
-	}
-	return resp, nil
-}
-
-func (a *AtCoder) ScrapeQuizzes() ([]string, error) {
-	resp, err := a.loginAndGet(a.QuizzesURL())
+func (a *AtCoder) ScrapeTasks() ([]string, error) {
+	addr := fmt.Sprintf("https://%v/contests/%v/tasks", atCoderHost, a.ContestID)
+	resp, err := a.client.Get(addr)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	glog.V(4).Infof("Scrapping quizzes from %v...", a.QuizzesURL())
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	var quizzes []string
-	var invalidQuiz bool
-	doc.Find("table tbody tr").Each(func(i int, s *goquery.Selection) {
+	var (
+		cnt   int
+		tasks []string
+	)
+	doc.Find("table tbody tr td").Each(func(i int, s *goquery.Selection) {
 		path, ok := s.Find("a").First().Attr("href")
-		if !ok {
-			glog.Warningf("Node #%v: has not URL attribute", i)
-			invalidQuiz = true
+		if ok && cnt%2 == 0 {
+			// path has /contests/<id>/tasks/<quiz_id (e.g. abc228_a)>
+			parts := strings.Split(path, "/")
+			tasks = append(tasks, parts[len(parts)-1])
 		}
-		// path has /contests/<id>/tasks/<quiz_id>
-		section := strings.Split(path, "/")
-		quizzes = append(quizzes, section[len(section)-1])
-		glog.V(8).Infof("Node #%v: save quizID from %v", i, section)
+		cnt++
 	})
-	if len(quizzes) == 0 {
-		return nil, fmt.Errorf("failed to scrape quiz from %v", a.QuizzesURL())
+	if len(tasks) == 0 {
+		return nil, fmt.Errorf("failed to scrape quiz from %#+v", doc)
 	}
-	if invalidQuiz {
-		return nil, fmt.Errorf("cannot get valid quizzes from %v", a.QuizzesURL())
-	}
-	glog.V(4).Info("Success to scrape quizzes")
-	return quizzes, nil
+	return tasks, nil
 }
 
-func (a *AtCoder) ScrapeSample(quizID string) ([]*Sample, error) {
-	resp, err := a.loginAndGet(a.QuizURL(quizID))
+func (a *AtCoder) ScrapeTask(taskID string) ([]*Sample, error) {
+	addr := fmt.Sprintf("https://%v/contests/%v/tasks/%v", atCoderHost, a.ContestID, taskID)
+	resp, err := a.client.Get(addr)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	glog.V(4).Infof("Scraping samples from %v...", a.QuizURL(quizID))
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-
 	// AtCoder outputs both JP and EN content in one page.
 	var ss []*Sample
 	doc.Find(".lang-en pre").Each(func(i int, s *goquery.Selection) {
 		if i == 0 {
-			glog.V(8).Infof("Node #%v: skip it because first block is not sample", i)
 			return
 		}
 		if i%2 == 1 {
-			id := i/2 + 1
-			glog.V(8).Infof("Node #%v: append a sample as %v.in", i, id)
-			ss = append(ss, &Sample{ID: id, Input: s.Text()})
+			ss = append(ss, &Sample{In: s.Text()})
 			return
 		}
-		glog.V(8).Infof("Node #%v: append a sample as %v.out", i, i/2)
-		ss[i/2-1].Output = s.Text()
+		ss[i/2-1].Out = s.Text()
 	})
 	if len(ss) == 0 {
-		return nil, fmt.Errorf("failed to scrape samples from %v", a.QuizURL(quizID))
+		return nil, fmt.Errorf("failed to scrape samples from %#+v", doc)
 	}
-	glog.V(4).Info("Success to scrape samples")
 	return ss, nil
 }
 
-func (a *AtCoder) SubmitCode(quizID, sorceFile string) error {
-	code, err := ioutil.ReadFile(sorceFile)
+func (a *AtCoder) Submit(taskID, prog string) error {
+	code, err := ioutil.ReadFile(prog)
 	if err != nil {
 		return err
 	}
-	ext := filepath.Ext(sorceFile)
+	ext := filepath.Ext(prog)
 	langID, err := ext2LangID(ext)
 	if err != nil {
 		return err
 	}
+
 	values := url.Values{}
-	values.Add("data.TaskScreenName", quizID)
+	values.Add("data.TaskScreenName", taskID)
 	values.Add("data.LanguageId", langID)
 	values.Add("sourceCode", string(code))
 
-	glog.V(4).Infof("Submit %q solution to the AtCoder...", quizID)
-	resp, err := a.loginAndPost(a.SubmitURL(), &values)
+	addr := fmt.Sprintf("https://%v/contests/%v/submit", atCoderHost, a.ContestID)
+	resp, err := a.client.PostForm(addr, &values)
 	if err != nil {
 		return err
 	}
@@ -269,17 +166,17 @@ func (a *AtCoder) SubmitCode(quizID, sorceFile string) error {
 	if _, err := buf.ReadFrom(resp.Body); err != nil {
 		return err
 	}
-	glog.V(4).Infof("Success to submit code: %v", buf.String())
-
 	return nil
 }
 
 func ext2LangID(ext string) (string, error) {
 	switch ext {
-	case lang.TypeCpp:
-		return "3003", nil
-	case lang.TypeGo:
-		return "3013", nil
+	case lang.LangCpp:
+		return "4003", nil
+	case lang.LangGo:
+		return "4026", nil
+	case lang.LangPython:
+		return "4006", nil
 	}
-	return "", fmt.Errorf("%q is not supported", ext)
+	return "", fmt.Errorf("%q is unsupported language", ext)
 }

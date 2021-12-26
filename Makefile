@@ -9,7 +9,7 @@ VERSION ?= $(shell git rev-parse --short HEAD)
 OUTDIR := build/out
 
 # GOLDFLAGS is a flag used for a build command.
-GOLDFLAGS := -w -X $(PKGROOT)/cmd.version=$(VERSION) -X $(PKGROOT)/cmd.gitRepo=$(PKGROOT)
+GOLDFLAGS := -w -X $(PKGROOT)/cmd.version=$(VERSION)
 
 
 .PHONY: build build-linux build-darwin build-windows install test vet lint fmt check clean

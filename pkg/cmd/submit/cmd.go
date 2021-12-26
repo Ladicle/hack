@@ -1,69 +1,141 @@
 package submit
 
 import (
+	"errors"
+	"fmt"
+	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
-	"github.com/Ladicle/hack/pkg/format"
-	"github.com/Ladicle/hack/pkg/util"
-	"github.com/golang/glog"
-	"github.com/spf13/cobra"
+	"github.com/Ladicle/hack/pkg/lang"
 )
 
-type submitConig struct {
-	TimeLimit time.Duration
-
-	*format.HackRobot
+type Options struct {
+	Timeout time.Duration
+	DryRun  bool
 }
 
-func NewCommand() *cobra.Command {
-	cfg := submitConig{HackRobot: format.NewHackRobot(os.Stdout)}
+func NewCommand(f *config.File, out io.Writer) *cobra.Command {
+	var opts Options
+
 	cmd := &cobra.Command{
-		Use:     "submit",
-		Aliases: []string{"sub"},
-		Short:   "Submit the solution",
-		Run:     cfg.run,
+		Use:          "submit",
+		Aliases:      []string{"sub", "s"},
+		Short:        "Submit the solution",
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return opts.Run(f, out)
+		},
 	}
-	cmd.Flags().DurationVarP(&cfg.TimeLimit, "time-limit", "t", 2*time.Second,
-		"Set execution time-limit")
+
+	cmd.Flags().DurationVar(&opts.Timeout, "timeout", 2*time.Second, "Set timeout duration.")
+	cmd.Flags().BoolVarP(&opts.DryRun, "dry-run", "d", false, "Only run tests and do not submit program.")
+
 	return cmd
 }
 
-func (cfg *submitConig) run(cmd *cobra.Command, args []string) {
+func (o *Options) Run(f *config.File, out io.Writer) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		glog.Fatal(err)
+		return err
 	}
-	quizID, err := contest.CurrentQuizID(wd)
+
+	// Test program with all samples
+	prog, err := findMainFile(wd)
 	if err != nil {
-		cfg.Fatal("Not in the contest directory.")
+		return err
 	}
-
-	sourceFile, err := util.GetProgName()
+	tester, err := lang.GetTester(prog, o.Timeout)
 	if err != nil {
-		glog.Fatal(err)
+		return err
 	}
-	if sourceFile == "" {
-		cfg.Fatal("Not found the %v program in this directory.", "main.[go|cpp]")
+	sampleNum, err := cntSamples(wd)
+	if err != nil {
+		return err
+	}
+	var cntErr int
+	for sampleID := 1; sampleID <= sampleNum; sampleID++ {
+		err = tester.Run(sampleID)
+		if err == nil {
+			fmt.Fprintf(out, "[AC] Sample #%d\n", sampleID)
+			continue
+		}
+		var langErr lang.Error
+		if ok := errors.As(err, &langErr); !ok {
+			return err
+		}
+		fmt.Fprintln(out, langErr)
+		cntErr++
+	}
+	if cntErr > 0 {
+		return fmt.Errorf("Fail %d samples", cntErr)
 	}
 
-	s := NewSolution(quizID, sourceFile, cfg.HackRobot)
-	if err := s.Test(cfg.TimeLimit); err != nil {
-		glog.Fatal(err)
+	// Submit program
+	var (
+		contestID = getContestID(wd)
+		taskID    = getTaskID(wd)
+	)
+	if o.DryRun {
+		fmt.Fprintf(out, "Submit %v (dry-run)\n", taskID)
+		return nil
 	}
+	at, err := contest.NewAtCoder(contestID)
+	if err != nil {
+		return err
+	}
+	if err := at.Login(f.AtCoder.User, f.AtCoder.Pass); err != nil {
+		return err
+	}
+	if err := at.Submit(taskID, prog); err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "Submit %v\n", taskID)
+	return nil
+}
 
-	cfg.Printfln("")
-	if config.CurrentHost() == contest.HostAtCoder {
-		if err := s.Submit(); err != nil {
-			glog.Fatal(err)
-		}
-		if err := s.Open(); err != nil {
-			glog.Fatal(err)
+// findMainFile finds a file that has 'main' as a name prefix in the current directory.
+func findMainFile(dir string) (string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return "", err
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasPrefix(filepath.Base(entry.Name()), "main") {
+			return entry.Name(), nil
 		}
 	}
-	if err := s.Copy(); err != nil {
-		glog.Fatal(err)
+	return "", errors.New("not found 'main' program in the current directory")
+}
+
+// cntSamples counts the number of sample input files which has a '.in' extension.
+func cntSamples(dir string) (int, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return -1, err
 	}
+	var cnt int
+	for _, entry := range entries {
+		if !entry.IsDir() && filepath.Ext(entry.Name()) == ".in" {
+			cnt++
+		}
+	}
+	return cnt, nil
+}
+
+// getContestID returns the parent directory name as the contest ID.
+func getContestID(dir string) string {
+	curBase := filepath.Base(dir)
+	return filepath.Base(dir[:len(dir)-len(curBase)])
+}
+
+// getTaskID returns the specified directory name as the task ID.
+func getTaskID(dir string) string {
+	return filepath.Base(dir)
 }

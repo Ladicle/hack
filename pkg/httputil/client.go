@@ -2,12 +2,13 @@ package httputil
 
 import (
 	"crypto/tls"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
 
-	"github.com/golang/glog"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -35,20 +36,36 @@ func NewSession(serverName string) (*Session, error) {
 }
 
 func (s *Session) Get(url string) (*http.Response, error) {
-	glog.V(4).Infof("Get %v", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: [GET] %s", err, url)
 	}
-	return s.client.Do(req)
+	resp, err := do(s.client, req)
+	if err != nil {
+		return nil, fmt.Errorf("%w: [GET] %s", err, url)
+	}
+	return resp, nil
 }
 
 func (s *Session) PostForm(url string, v *url.Values) (*http.Response, error) {
-	glog.V(4).Infof("Post %v to %v", v, url)
 	req, err := http.NewRequest("POST", url, strings.NewReader(v.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("%w: [POST] %s?%s", err, url, v.Encode())
+	}
+	resp, err := do(s.client, req)
+	if err != nil {
+		return nil, fmt.Errorf("%w: [POST] %s?%s", err, url, v.Encode())
+	}
+	return resp, nil
+}
+
+func do(c *http.Client, req *http.Request) (*http.Response, error) {
+	resp, err := c.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	return s.client.Do(req)
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
+	return resp, nil
 }

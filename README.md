@@ -2,15 +2,6 @@
 
 `hack` is a commandline tool to assist your programming content.
 
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-**Table of Contents**
-
-- [Hack](#hack)
-    - [Installation](#installation)
-    - [Usage](#usage)
-
-<!-- markdown-toc end -->
-
 ## Installation
 
 ```bash
@@ -20,101 +11,61 @@ go get -u github.com/Ladicle/hack
 ## Usage
 
 ```
+Hack assists your programming contest.
+
 Usage:
   hack [command]
 
 Available Commands:
-  set         Switch contest current contest
-  get         get contests
-  init        Initialize workspace for the contest
-  jump        Get current quiz directory
-  test        Test main program
-  copy        Copy main program to clipboard
-  version     Show this command version
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  init        create directories and download sample test cases for AtCoder.
+  submit      Submit the solution
 
 Flags:
-      --alsologtostderr                  log to standard error as well as files
-  -c, --config string                    config file (default ~/.hack.yaml)
-  -h, --help                             help for hack
-      --log_backtrace_at traceLocation   when logging hits line file:N, emit a stack trace (default :0)
-      --log_dir string                   If non-empty, write log files in this directory
-      --logtostderr                      log to standard error instead of files
-      --stderrthreshold severity         logs at or above this threshold go to stderr (default 2)
-  -v, --v Level                          log level for V logs
-      --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
+      --config string   path to the configuration file (default "~/.config/hack")
+  -h, --help            help for hack
+  -v, --version         version for hack
 
 Use "hack [command] --help" for more information about a command.
 ```
 
 ## Quick Started
 
-Set the next contest to work on.
+Write configuration and save it as a `~/.config/hack` file.
 
 ```
-$ hack set atcoder/abc100
-🤖 < OK! I set "atcoder/abc100" for the next contest
+atcoder:
+  pass: <password>
+  user: <username>
 ```
 
-Jump to the contest root directory.
+Initialize contest directory and download samples.
 
 ```
-$ cd (hack jump)
+$ hack init abc100
+Initialize directory for abc100:
+ ✓ Scraping task abc100_a
+   ✓ Scraping sample #1
+   ✓ Scraping sample #2
+   ✓ Scraping sample #3
+ ✓ Scraping task abc100_b
+   ✓ Scraping sample #1
+   ✓ Scraping sample #2
+   ✓ Scraping sample #3
+ ✓ Scraping task abc100_c
+   ✓ Scraping sample #1
+   ✓ Scraping sample #2
+   ✓ Scraping sample #3
 ```
 
-Initialize the current contest.
+After writing the code, test and submit it if the program pass all test cases.
 
 ```
-$ hack init
-🤖 < Sure! I'll setup environment for "abc100" contest.
-
- ✓ Scraping abc100 quizzes 🔎
- ✓ Creating 4 quiz directories 📦
- ✓ Scraping abc100_a quizzes 📥
- ✓ Scraping sample #1 📝
- ✓ Scraping sample #2 📝
- ✓ Scraping sample #3 📝
- ✓ Scraping sample #3 📝
- ✓ Scraping abc100_b quizzes 📥
- ✓ Scraping sample #1 📝
- ✓ Scraping sample #2 📝
- ✓ Scraping sample #3 📝
- ✓ Scraping sample #3 📝
- ✓ Scraping abc100_c quizzes 📥
- ✓ Scraping sample #1 📝
- ✓ Scraping sample #2 📝
- ✓ Scraping sample #3 📝
- ✓ Scraping sample #4 📝
- ✓ Scraping sample #4 📝
- ✓ Scraping abc100_d quizzes 📥
- ✓ Scraping sample #1 📝
- ✓ Scraping sample #2 📝
- ✓ Scraping sample #3 📝
- ✓ Scraping sample #4 📝
-```
-
-Go to the first quiz directory.
-
-```
-$ cd (hack j)
-```
-
-Let's programming!
-
-```
-$ emacs main.cpp
-```
-
-After writing the code, test it.
-
-```
-$ hack test
+$ hack submit
 [AC] Sample #1
 [AC] Sample #2
 [AC] Sample #3
-```
 
-There is no problem, copy and submit it :)
-
-```
-$ hack copy
+Submit abc100_c
 ```

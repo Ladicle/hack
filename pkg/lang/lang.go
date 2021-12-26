@@ -4,65 +4,117 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
+	"path/filepath"
 	"time"
+
+	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const (
-	TypeCpp = ".cpp"
-	TypeGo  = ".go"
+	defaultBinaryName = "./main"
 
-	ExeBinary = "solution"
+	LangCpp    = ".cpp"
+	LangGo     = ".go"
+	LangPython = ".py"
 )
 
 // Tester is a interface for testing programs.
 type Tester interface {
-	Compile() error
-	Run(sampleID string, timeout time.Duration) (string, error)
+	// Run executes program which is passed sample input with the specified ID.
+	Run(sampleID int) error
 }
 
-func GetTester(fileName string) Tester {
-	switch {
-	case strings.HasSuffix(fileName, TypeCpp):
-		return &CppTester{ProgName: fileName}
-	case strings.HasSuffix(fileName, TypeGo):
-		return &GoTester{ProgName: fileName}
+type Options struct {
+	Program string
+	Timeout time.Duration
+}
+
+type ErrorType string
+
+const (
+	RuntimeErr  ErrorType = "RE"
+	TimeoutErr  ErrorType = "TLE"
+	WrongAnswer ErrorType = "WA"
+)
+
+type Error struct {
+	ID    int
+	Type  ErrorType
+	Extra string
+}
+
+func (e Error) Error() string {
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("[%v] Sample #%d", e.Type, e.ID))
+	if e.Extra != "" {
+		buf.WriteString("\n")
+		buf.WriteString(e.Extra)
 	}
-	return nil
+	return buf.String()
 }
 
-func runBinary(sampleID string, timeout time.Duration) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
+func GetTester(program string, timeout time.Duration) (Tester, error) {
+	opts := Options{
+		Program: program,
+		Timeout: timeout,
+	}
+	ext := filepath.Ext(program)
+	switch ext {
+	case LangCpp:
+		return &CppTester{Options: opts}, nil
+	case LangGo:
+		return &GoTester{Options: opts}, nil
+	case LangPython:
+		return &PythonTester{Options: opts}, nil
+	}
+	return nil, fmt.Errorf("%q is unsupported program", ext)
+}
 
-	var errout bytes.Buffer
-	c := exec.CommandContext(ctx, fmt.Sprintf("./%v", ExeBinary))
+func runProgram(ctx context.Context, sampleID int, args ...string) error {
+	var (
+		out    bytes.Buffer
+		errout bytes.Buffer
+	)
+	c := exec.CommandContext(ctx, args[0], args[1:]...)
+	c.Stdout = &out
 	c.Stderr = &errout
 
-	inf, err := os.Open(fmt.Sprintf("%v.in", sampleID))
+	// Pass sample input file to Standard Input
+	sampleInput, err := os.Open(fmt.Sprintf("%d.in", sampleID))
 	if err != nil {
-		return "", err
+		return err
 	}
-	c.Stdin = inf
-
-	outfName := attemptName(sampleID)
-	outf, err := os.Create(outfName)
-	if err != nil {
-		return "", err
-	}
-	c.Stdout = outf
+	c.Stdin = sampleInput
 
 	if err := c.Run(); err != nil {
 		if err == context.DeadlineExceeded {
-			return outfName, err
+			return Error{ID: sampleID, Type: TimeoutErr}
 		}
-		return outfName, fmt.Errorf("%v - %v", err.Error(), errout.String())
+		if len(errout.Bytes()) > 0 {
+			return Error{
+				ID:    sampleID,
+				Type:  RuntimeErr,
+				Extra: fmt.Sprintf("%v: %s", err, errout.String()),
+			}
+		}
+		return err
 	}
-	return outfName, nil
-}
 
-func attemptName(id string) string {
-	return fmt.Sprintf("attempt-sample%v-%v", id, time.Now().Format("20060102-150405"))
+	want, err := ioutil.ReadFile(fmt.Sprintf("%d.out", sampleID))
+	if err != nil {
+		return err
+	}
+	dmp := diffmatchpatch.New()
+	diffs := dmp.DiffMain(out.String(), string(want), false)
+	if len(diffs) == 1 && diffs[0].Type == diffmatchpatch.DiffEqual {
+		return nil
+	}
+	return Error{
+		ID:    sampleID,
+		Type:  WrongAnswer,
+		Extra: dmp.DiffPrettyText(diffs),
+	}
 }

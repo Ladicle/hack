@@ -1,23 +1,24 @@
 package lang
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
-	"time"
 )
 
-type GoTester struct {
-	ProgName string
-}
+var _ Tester = GoTester{}
 
-func (t *GoTester) Compile() error {
-	c := exec.Command("go", "build", "-o", ExeBinary, t.ProgName)
-	if out, err := c.CombinedOutput(); err != nil {
-		return fmt.Errorf("%v - %v", err.Error(), string(out))
+type GoTester struct{ Options }
+
+func (t GoTester) Run(sampleID int) error {
+	cmd := exec.Command("go", "build", "-o", defaultBinaryName, t.Program)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return Error{
+			ID:    sampleID,
+			Type:  RuntimeErr,
+			Extra: fmt.Sprintf("%v: %s", err, out)}
 	}
-	return nil
-}
-
-func (t *GoTester) Run(sampleID string, timeout time.Duration) (string, error) {
-	return runBinary(sampleID, timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), t.Timeout)
+	defer cancel()
+	return runProgram(ctx, sampleID, defaultBinaryName)
 }
