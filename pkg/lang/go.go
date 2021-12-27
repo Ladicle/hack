@@ -11,7 +11,7 @@ var _ Tester = GoTester{}
 type GoTester struct{ Options }
 
 func (t GoTester) Run(sampleID int) error {
-	cmd := exec.Command("go", "build", "-o", defaultBinaryName, t.Program)
+	cmd := exec.Command("go", "build", "-o", BinaryName, t.Program)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return Error{
 			ID:    sampleID,
@@ -20,5 +20,5 @@ func (t GoTester) Run(sampleID int) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), t.Timeout)
 	defer cancel()
-	return runProgram(ctx, sampleID, defaultBinaryName)
+	return runProgram(ctx, sampleID, BinaryName)
 }

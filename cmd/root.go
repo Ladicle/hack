@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Ladicle/hack/pkg/cmd/ini"
-	"github.com/Ladicle/hack/pkg/cmd/submit"
+	"github.com/Ladicle/hack/pkg/cmd/test"
 	"github.com/Ladicle/hack/pkg/config"
 )
 
@@ -17,9 +17,10 @@ const defaultPath = "~/.config/hack"
 
 func Run() error {
 	cmd := cobra.Command{
-		Use:     "hack",
-		Short:   "Hack assists your programming contest.",
-		Version: version,
+		Use:               "hack",
+		Short:             "Hack assists your programming contest.",
+		Version:           version,
+		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 
 	var (
@@ -30,7 +31,7 @@ func Run() error {
 	)
 	cmd.PersistentFlags().StringVar(&path, "config", defaultPath, "path to the configuration file")
 	cmd.AddCommand(ini.NewCommand(f, out))
-	cmd.AddCommand(submit.NewCommand(f, out))
+	cmd.AddCommand(test.NewCommand(f, out))
 
 	cobra.OnInitialize(func() {
 		config.MustUnmarshal(path, f)

@@ -17,10 +17,9 @@ Usage:
   hack [command]
 
 Available Commands:
-  completion  Generate the autocompletion script for the specified shell
   help        Help about any command
-  init        create directories and download sample test cases for AtCoder.
-  submit      Submit the solution
+  init        Create directories and download samples
+  test        Test your program
 
 Flags:
       --config string   path to the configuration file (default "~/.config/hack")
@@ -62,10 +61,9 @@ Initialize directory for abc100:
 After writing the code, test and submit it if the program pass all test cases.
 
 ```
-$ hack submit
+$ hack test
 [AC] Sample #1
 [AC] Sample #2
 [AC] Sample #3
-
-Submit abc100_c
+Copy main.py!
 ```

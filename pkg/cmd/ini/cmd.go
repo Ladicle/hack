@@ -11,10 +11,12 @@ import (
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
+	"github.com/Ladicle/hack/pkg/lang"
 )
 
 const (
-	dirPerm = 0755
+	dirPerm  = 0755
+	filePerm = 0644
 
 	indentLv1 = " "
 	indentLv2 = "   "
@@ -26,15 +28,17 @@ const (
 type Options struct {
 	// ID is a identifier for the contest.
 	ID string
+	// Lang is a name of programming language.
+	Lang string
 }
 
 func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 	var opts Options
 
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:          "init <CONTEST>",
 		Aliases:      []string{"ini", "i"},
-		Short:        "create directories and download sample test cases for AtCoder.",
+		Short:        "Create directories and download samples",
 		Example:      example,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,6 +48,10 @@ func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 			return opts.Run(f, out)
 		},
 	}
+
+	cmd.Flags().StringVarP(&opts.Lang, "lang", "l", "", "programming Language. (e.g. go)")
+
+	return cmd
 }
 
 func (o *Options) Validate(args []string) error {
@@ -84,6 +92,15 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 			return err
 		}
 
+		if o.Lang != "" {
+			prog := filepath.Join(dir, fmt.Sprintf("%v.%v", lang.ProgName, o.Lang))
+			f, err := os.Create(prog)
+			if err != nil {
+				return err
+			}
+			f.Close()
+		}
+
 		fmt.Fprintf(out, "%v✓ Scraping task %v\n", indentLv1, task)
 		for i, sample := range samples {
 			id := i + 1 // convert to 1-index
@@ -91,7 +108,7 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 				continue
 			}
 			fmt.Fprintf(out, "%v✓ Scraping sample #%d\n", indentLv2, id)
-			if err := sample.Write(dir, id); err != nil {
+			if err := sample.Write(dir, id, filePerm); err != nil {
 				return err
 			}
 		}

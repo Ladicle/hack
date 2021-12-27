@@ -1,17 +1,14 @@
 package contest
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/url"
-	"path/filepath"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 
-	"github.com/Ladicle/hack/pkg/httputil"
-	"github.com/Ladicle/hack/pkg/lang"
+	"github.com/Ladicle/hack/pkg/sample"
+	"github.com/Ladicle/hack/pkg/session"
 )
 
 const atCoderHost = "atcoder.jp"
@@ -19,12 +16,12 @@ const atCoderHost = "atcoder.jp"
 type AtCoder struct {
 	ContestID string
 
-	client *httputil.Session
+	client *session.Client
 }
 
 // NewAtCoder creates and return the AtCoder object.
 func NewAtCoder(contestID string) (*AtCoder, error) {
-	s, err := httputil.NewSession("atcoder.jp")
+	s, err := session.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -34,26 +31,26 @@ func NewAtCoder(contestID string) (*AtCoder, error) {
 	}, nil
 }
 
-func (a *AtCoder) Login(user, pass string) error {
-	addr := fmt.Sprintf("https://%v/login", atCoderHost)
+func (a AtCoder) Login(user, pass string) error {
+	addr := fmt.Sprintf("https://%s/login", atCoderHost)
 	csrfToken, err := a.getCsrfToken(addr)
 	if err != nil {
 		return err
 	}
 
-	values := url.Values{}
-	values.Add("username", user)
-	values.Add("password", pass)
-	values.Add("csrf_token", csrfToken)
+	vals := make(url.Values, 3)
+	vals.Add("username", user)
+	vals.Add("password", pass)
+	vals.Add("csrf_token", csrfToken)
 
-	resp, err := a.client.PostForm(addr, &values)
+	resp, err := a.client.PostForm(addr, vals)
 	if err != nil {
 		return err
 	}
 	return resp.Body.Close()
 }
 
-func (a *AtCoder) getCsrfToken(addr string) (string, error) {
+func (a AtCoder) getCsrfToken(addr string) (string, error) {
 	resp, err := a.client.Get(addr)
 	if err != nil {
 		return "", err
@@ -77,7 +74,7 @@ func (a *AtCoder) getCsrfToken(addr string) (string, error) {
 	return csrfToken, nil
 }
 
-func (a *AtCoder) ScrapeTasks() ([]string, error) {
+func (a AtCoder) ScrapeTasks() ([]string, error) {
 	addr := fmt.Sprintf("https://%v/contests/%v/tasks", atCoderHost, a.ContestID)
 	resp, err := a.client.Get(addr)
 	if err != nil {
@@ -90,18 +87,14 @@ func (a *AtCoder) ScrapeTasks() ([]string, error) {
 		return nil, err
 	}
 
-	var (
-		cnt   int
-		tasks []string
-	)
-	doc.Find("table tbody tr td").Each(func(i int, s *goquery.Selection) {
-		path, ok := s.Find("a").First().Attr("href")
-		if ok && cnt%2 == 0 {
+	var tasks []string
+	doc.Find("table tbody tr").Each(func(i int, s *goquery.Selection) {
+		path, ok := s.Find("td").First().Find("a").First().Attr("href")
+		if ok {
 			// path has /contests/<id>/tasks/<quiz_id (e.g. abc228_a)>
 			parts := strings.Split(path, "/")
 			tasks = append(tasks, parts[len(parts)-1])
 		}
-		cnt++
 	})
 	if len(tasks) == 0 {
 		return nil, fmt.Errorf("failed to scrape quiz from %#+v", doc)
@@ -109,8 +102,8 @@ func (a *AtCoder) ScrapeTasks() ([]string, error) {
 	return tasks, nil
 }
 
-func (a *AtCoder) ScrapeTask(taskID string) ([]*Sample, error) {
-	addr := fmt.Sprintf("https://%v/contests/%v/tasks/%v", atCoderHost, a.ContestID, taskID)
+func (a AtCoder) ScrapeTask(taskID string) ([]*sample.Set, error) {
+	addr := GetTaskURL(a.ContestID, taskID)
 	resp, err := a.client.Get(addr)
 	if err != nil {
 		return nil, err
@@ -122,13 +115,13 @@ func (a *AtCoder) ScrapeTask(taskID string) ([]*Sample, error) {
 		return nil, err
 	}
 	// AtCoder outputs both JP and EN content in one page.
-	var ss []*Sample
+	var ss []*sample.Set
 	doc.Find(".lang-en pre").Each(func(i int, s *goquery.Selection) {
 		if i == 0 {
 			return
 		}
 		if i%2 == 1 {
-			ss = append(ss, &Sample{In: s.Text()})
+			ss = append(ss, &sample.Set{In: s.Text()})
 			return
 		}
 		ss[i/2-1].Out = s.Text()
@@ -139,44 +132,6 @@ func (a *AtCoder) ScrapeTask(taskID string) ([]*Sample, error) {
 	return ss, nil
 }
 
-func (a *AtCoder) Submit(taskID, prog string) error {
-	code, err := ioutil.ReadFile(prog)
-	if err != nil {
-		return err
-	}
-	ext := filepath.Ext(prog)
-	langID, err := ext2LangID(ext)
-	if err != nil {
-		return err
-	}
-
-	values := url.Values{}
-	values.Add("data.TaskScreenName", taskID)
-	values.Add("data.LanguageId", langID)
-	values.Add("sourceCode", string(code))
-
-	addr := fmt.Sprintf("https://%v/contests/%v/submit", atCoderHost, a.ContestID)
-	resp, err := a.client.PostForm(addr, &values)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	buf := new(bytes.Buffer)
-	if _, err := buf.ReadFrom(resp.Body); err != nil {
-		return err
-	}
-	return nil
-}
-
-func ext2LangID(ext string) (string, error) {
-	switch ext {
-	case lang.LangCpp:
-		return "4003", nil
-	case lang.LangGo:
-		return "4026", nil
-	case lang.LangPython:
-		return "4006", nil
-	}
-	return "", fmt.Errorf("%q is unsupported language", ext)
+func GetTaskURL(contestID, taskID string) string {
+	return fmt.Sprintf("https://%v/contests/%v/tasks/%v", atCoderHost, contestID, taskID)
 }

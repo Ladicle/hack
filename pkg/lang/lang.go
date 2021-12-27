@@ -3,22 +3,26 @@ package lang
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/Ladicle/hack/pkg/sample"
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const (
-	defaultBinaryName = "./main"
+	ProgName   = "main"
+	BinaryName = "./main"
 
-	LangCpp    = ".cpp"
-	LangGo     = ".go"
-	LangPython = ".py"
+	LangCpp    = "cpp"
+	LangGo     = "go"
+	LangPython = "py"
 )
 
 // Tester is a interface for testing programs.
@@ -61,8 +65,8 @@ func GetTester(program string, timeout time.Duration) (Tester, error) {
 		Program: program,
 		Timeout: timeout,
 	}
-	ext := filepath.Ext(program)
-	switch ext {
+	lang := filepath.Ext(program)[1:]
+	switch lang {
 	case LangCpp:
 		return &CppTester{Options: opts}, nil
 	case LangGo:
@@ -70,7 +74,7 @@ func GetTester(program string, timeout time.Duration) (Tester, error) {
 	case LangPython:
 		return &PythonTester{Options: opts}, nil
 	}
-	return nil, fmt.Errorf("%q is unsupported program", ext)
+	return nil, fmt.Errorf("%q is unsupported program", lang)
 }
 
 func runProgram(ctx context.Context, sampleID int, args ...string) error {
@@ -83,7 +87,7 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 	c.Stderr = &errout
 
 	// Pass sample input file to Standard Input
-	sampleInput, err := os.Open(fmt.Sprintf("%d.in", sampleID))
+	sampleInput, err := os.Open(sample.Name(sampleID, sample.ExtSampleIn))
 	if err != nil {
 		return err
 	}
@@ -103,7 +107,7 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 		return err
 	}
 
-	want, err := ioutil.ReadFile(fmt.Sprintf("%d.out", sampleID))
+	want, err := ioutil.ReadFile(sample.Name(sampleID, sample.ExtSampleOut))
 	if err != nil {
 		return err
 	}
@@ -117,4 +121,18 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 		Type:  WrongAnswer,
 		Extra: dmp.DiffPrettyText(diffs),
 	}
+}
+
+// FindProg finds a file that has 'main' as a name prefix in the current directory.
+func FindProg(dir string) (string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return "", err
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasPrefix(filepath.Base(entry.Name()), ProgName) {
+			return entry.Name(), nil
+		}
+	}
+	return "", errors.New("not found 'main' program in the current directory")
 }
