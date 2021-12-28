@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/atotto/clipboard"
@@ -94,21 +93,14 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 	}
 
 	if o.Open {
-		taskURL := contest.GetTaskURL(getContestID(wd), getTaskID(wd))
+		var (
+			contestID = contest.GetContestID(wd)
+			taskID    = contest.GetTaskID(wd)
+		)
+		taskURL := contest.GetTaskURL(contestID, taskID)
 		if err := browser.OpenURL(taskURL); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-// getContestID returns the parent directory name as the contest ID.
-func getContestID(dir string) string {
-	curBase := filepath.Base(dir)
-	return filepath.Base(dir[:len(dir)-len(curBase)])
-}
-
-// getTaskID returns the specified directory name as the task ID.
-func getTaskID(dir string) string {
-	return filepath.Base(dir)
 }

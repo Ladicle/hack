@@ -3,6 +3,7 @@ package contest
 import (
 	"fmt"
 	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -132,6 +133,18 @@ func (a AtCoder) ScrapeTask(taskID string) ([]*sample.Set, error) {
 	return ss, nil
 }
 
+// GetTaskURL returns URL of the specified task page.
 func GetTaskURL(contestID, taskID string) string {
 	return fmt.Sprintf("https://%v/contests/%v/tasks/%v", atCoderHost, contestID, taskID)
+}
+
+// GetContestID returns the parent directory name as the contest ID.
+func GetContestID(dir string) string {
+	curBase := filepath.Base(dir)
+	return filepath.Base(dir[:len(dir)-len(curBase)])
+}
+
+// GetTaskID returns the specified directory name as the task ID.
+func GetTaskID(dir string) string {
+	return filepath.Base(dir)
 }

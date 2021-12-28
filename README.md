@@ -19,6 +19,7 @@ Usage:
 Available Commands:
   help        Help about any command
   init        Create directories and download samples
+  open        Open current task page
   test        Test your program
 
 Flags:
