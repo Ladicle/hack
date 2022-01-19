@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Ladicle/hack/pkg/sample"
+	"github.com/fatih/color"
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
@@ -47,12 +48,22 @@ const (
 type Error struct {
 	ID    int
 	Type  ErrorType
+	Input string
 	Extra string
 }
 
 func (e Error) Error() string {
-	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("[%v] Sample #%d", e.Type, e.ID))
+	var (
+		buf     bytes.Buffer
+		errType string
+	)
+	switch e.Type {
+	case RuntimeErr, WrongAnswer:
+		errType = color.RedString("%v", e.Type)
+	case TimeoutErr:
+		errType = color.YellowString("%v", e.Type)
+	}
+	buf.WriteString(fmt.Sprintf("[%s] Sample #%d", errType, e.ID))
 	if e.Extra != "" {
 		buf.WriteString("\n")
 		buf.WriteString(e.Extra)
@@ -91,6 +102,7 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 	if err != nil {
 		return err
 	}
+	defer sampleInput.Close()
 	c.Stdin = sampleInput
 
 	if err := c.Run(); err != nil {
@@ -111,15 +123,35 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 	if err != nil {
 		return err
 	}
+
 	dmp := diffmatchpatch.New()
 	diffs := dmp.DiffMain(out.String(), string(want), false)
 	if len(diffs) == 1 && diffs[0].Type == diffmatchpatch.DiffEqual {
 		return nil
 	}
+
+	input, err := ioutil.ReadFile(sampleInput.Name())
+	if err != nil {
+		return err
+	}
+
+	var buf bytes.Buffer
+	var deco = color.New(color.FgYellow).SprintlnFunc()
+	buf.WriteString(deco("Got:"))
+	buf.Write(out.Bytes())
+	buf.WriteString(deco("\nWant:"))
+	buf.Write(want)
+	if !color.NoColor {
+		buf.WriteString(deco("\nDiff:"))
+		buf.WriteString(dmp.DiffPrettyText(diffs))
+	}
+	buf.WriteString(deco("\nInput:"))
+	buf.Write(input)
+
 	return Error{
 		ID:    sampleID,
 		Type:  WrongAnswer,
-		Extra: dmp.DiffPrettyText(diffs),
+		Extra: buf.String(),
 	}
 }
 

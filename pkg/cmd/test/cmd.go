@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
+	"github.com/fatih/color"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 
@@ -22,6 +23,7 @@ type Options struct {
 	Timeout time.Duration
 	Copy    bool
 	Open    bool
+	Color   bool
 }
 
 func NewCommand(f *config.File, out io.Writer) *cobra.Command {
@@ -40,6 +42,7 @@ func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 	cmd.Flags().DurationVar(&opts.Timeout, "timeout", 2*time.Second, "set timeout duration.")
 	cmd.Flags().BoolVar(&opts.Copy, "copy", true, "copy program to clipboard after passing all tests.")
 	cmd.Flags().BoolVar(&opts.Open, "open", true, "open task page after passing all tests.")
+	cmd.Flags().BoolVarP(&opts.Color, "color", "C", true, "enable color output even if not in tty.")
 
 	return cmd
 }
@@ -63,11 +66,15 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 		return err
 	}
 
+	if o.Color {
+		color.NoColor = false
+	}
+
 	var cntErr int
 	for sampleID := 1; sampleID <= num; sampleID++ {
 		err = tester.Run(sampleID)
 		if err == nil {
-			fmt.Fprintf(out, "[AC] Sample #%d\n", sampleID)
+			fmt.Fprintf(out, "[%v] Sample #%d\n", color.GreenString("AC"), sampleID)
 			continue
 		}
 		var langErr lang.Error
@@ -78,7 +85,8 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 		cntErr++
 	}
 	if cntErr > 0 {
-		return fmt.Errorf("Fail %d samples", cntErr)
+		return fmt.Errorf("Fail %v, Pass %v samples",
+			color.RedString("%d", cntErr), color.GreenString("%d", num-cntErr))
 	}
 
 	if o.Copy {
