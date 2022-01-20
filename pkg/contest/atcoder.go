@@ -75,7 +75,8 @@ func (a AtCoder) getCsrfToken(addr string) (string, error) {
 	return csrfToken, nil
 }
 
-func (a AtCoder) ScrapeTasks() ([]string, error) {
+// ScrapeContest scrapes contest data from /contests/<ContestID>/tasks.
+func (a AtCoder) ScrapeContest() ([]string, error) {
 	addr := fmt.Sprintf("https://%v/contests/%v/tasks", atCoderHost, a.ContestID)
 	resp, err := a.client.Get(addr)
 	if err != nil {
@@ -103,7 +104,8 @@ func (a AtCoder) ScrapeTasks() ([]string, error) {
 	return tasks, nil
 }
 
-func (a AtCoder) ScrapeTask(taskID string) ([]*sample.Set, error) {
+// ScrapeSamples scrapes task samples from /contests/<ContestID>/tasks/<TaskID>.
+func (a AtCoder) ScrapeSamples(taskID string) ([]*sample.Set, error) {
 	addr := GetTaskURL(a.ContestID, taskID)
 	resp, err := a.client.Get(addr)
 	if err != nil {
@@ -147,4 +149,9 @@ func GetContestID(dir string) string {
 // GetTaskID returns the specified directory name as the task ID.
 func GetTaskID(dir string) string {
 	return filepath.Base(dir)
+}
+
+// GetContestDir return the contest directory name.
+func GetContestDir(baseDir, contestID string) string {
+	return filepath.Join(baseDir, "atcoder", contestID)
 }

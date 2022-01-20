@@ -64,6 +64,10 @@ func (o *Options) Validate(args []string) error {
 }
 
 func (o *Options) Run(f *config.File, out io.Writer) error {
+	return o.initAtCoder(f, out)
+}
+
+func (o Options) initAtCoder(f *config.File, out io.Writer) error {
 	at, err := contest.NewAtCoder(o.ID)
 	if err != nil {
 		return err
@@ -72,29 +76,25 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 		return err
 	}
 
-	tasks, err := at.ScrapeTasks()
-	if err != nil {
-		return err
-	}
-
-	if err := os.Mkdir(o.ID, dirPerm); err != nil && !os.IsExist(err) {
+	// Setup contest Directory
+	contestDir := contest.GetContestDir(f.BaseDir, o.ID)
+	if err := os.Mkdir(contestDir, dirPerm); err != nil && !os.IsExist(err) {
 		return err
 	}
 	fmt.Fprintf(out, "Initialize directory for %v:\n", o.ID)
 
+	tasks, err := at.ScrapeContest()
+	if err != nil {
+		return err
+	}
 	for _, task := range tasks {
-		samples, err := at.ScrapeTask(task)
-		if err != nil {
+		// Setup task directory
+		taskDir := filepath.Join(contestDir, task)
+		if err := os.Mkdir(taskDir, dirPerm); err != nil && !os.IsExist(err) {
 			return err
 		}
-
-		dir := filepath.Join(o.ID, task)
-		if err := os.Mkdir(dir, dirPerm); err != nil && !os.IsExist(err) {
-			return err
-		}
-
 		if o.Lang != "" {
-			prog := filepath.Join(dir, fmt.Sprintf("%v.%v", lang.ProgName, o.Lang))
+			prog := filepath.Join(taskDir, fmt.Sprintf("%v.%v", lang.ProgName, o.Lang))
 			f, err := os.OpenFile(prog, os.O_RDONLY|os.O_CREATE, 0666)
 			if err != nil {
 				return err
@@ -102,11 +102,15 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 			f.Close()
 		}
 
-		sampleDir := filepath.Join(dir, sample.SampleDir)
+		// Setup sample directory
+		sampleDir := filepath.Join(taskDir, sample.SampleDir)
 		if err := os.Mkdir(sampleDir, dirPerm); err != nil && !os.IsExist(err) {
 			return err
 		}
-
+		samples, err := at.ScrapeSamples(task)
+		if err != nil {
+			return err
+		}
 		fmt.Fprintf(out, "%v✓ Scraping task %v\n", indentLv1, task)
 		for i, sample := range samples {
 			id := i + 1 // convert to 1-index
@@ -114,7 +118,7 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 				continue
 			}
 			fmt.Fprintf(out, "%v✓ Scraping sample #%d\n", indentLv2, id)
-			if err := sample.Write(dir, id, filePerm); err != nil && !os.IsExist(err) {
+			if err := sample.Write(taskDir, id, filePerm); err != nil && !os.IsExist(err) {
 				return err
 			}
 		}

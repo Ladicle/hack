@@ -12,6 +12,7 @@ import (
 
 type File struct {
 	AtCoder Account `yaml:"atcoder"`
+	BaseDir string  `yaml:"basedir"`
 }
 
 type Account struct {
