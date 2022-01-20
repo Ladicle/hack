@@ -11,6 +11,8 @@ import (
 const (
 	ExtSampleIn  = ".in"
 	ExtSampleOut = ".out"
+
+	SampleDir = "samples"
 )
 
 type Set struct {
@@ -32,7 +34,7 @@ func (s Set) Write(dir string, id int, perm fs.FileMode) error {
 
 // CntInputs counts the number of sample input files.
 func CntInputs(dir string) (int, error) {
-	entries, err := os.ReadDir(dir)
+	entries, err := os.ReadDir(filepath.Join(dir, SampleDir))
 	if err != nil {
 		return -1, err
 	}
@@ -47,5 +49,5 @@ func CntInputs(dir string) (int, error) {
 
 // Name returns the name of the sample input or output file with the specified id.
 func Name(id int, ext string) string {
-	return fmt.Sprintf("%d%s", id, ext)
+	return fmt.Sprintf("%s/%d%s", SampleDir, id, ext)
 }
