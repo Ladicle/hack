@@ -148,10 +148,17 @@ func GetContestID(dir string) string {
 
 // GetTaskID returns the specified directory name as the task ID.
 func GetTaskID(dir string) string {
-	return filepath.Base(dir)
+	contestID := GetContestID(dir)
+	return fmt.Sprintf("%s_%s", contestID, filepath.Base(dir))
 }
 
 // GetContestDir return the contest directory name.
 func GetContestDir(baseDir, contestID string) string {
 	return filepath.Join(baseDir, "atcoder", contestID)
+}
+
+// GetTaskDir return the task directory name.
+func GetTaskDir(baseDir, taskID string) string {
+	parts := strings.SplitN(taskID, "_", 2)
+	return filepath.Join(baseDir, parts[1])
 }

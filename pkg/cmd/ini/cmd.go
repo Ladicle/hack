@@ -100,7 +100,7 @@ func (o Options) initAtCoder(f *config.File, out io.Writer) error {
 	}
 	for _, task := range tasks {
 		// Setup task directory
-		taskDir := filepath.Join(contestDir, task)
+		taskDir := contest.GetTaskDir(contestDir, task)
 		if err := os.Mkdir(taskDir, dirPerm); err != nil && !os.IsExist(err) {
 			return err
 		}
