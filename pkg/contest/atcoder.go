@@ -12,7 +12,10 @@ import (
 	"github.com/Ladicle/hack/pkg/session"
 )
 
-const atCoderHost = "atcoder.jp"
+const (
+	atCoderDir  = "atcoder"
+	atCoderHost = "atcoder.jp"
+)
 
 type AtCoder struct {
 	ContestID string
@@ -152,9 +155,14 @@ func GetTaskID(dir string) string {
 	return fmt.Sprintf("%s_%s", contestID, filepath.Base(dir))
 }
 
+// GetAtCoderDir return the AtCoder directory name.
+func GetAtCoderDir(baseDir string) string {
+	return filepath.Join(baseDir, atCoderDir)
+}
+
 // GetContestDir return the contest directory name.
 func GetContestDir(baseDir, contestID string) string {
-	return filepath.Join(baseDir, "atcoder", contestID)
+	return filepath.Join(baseDir, atCoderDir, contestID)
 }
 
 // GetTaskDir return the task directory name.

@@ -17,6 +17,7 @@ Usage:
   hack [command]
 
 Available Commands:
+  go          Print path to the directory
   help        Help about any command
   init        Create directories and download samples
   open        Open current task page
@@ -38,6 +39,7 @@ Write configuration and save it as a `~/.config/hack` file.
 atcoder:
   pass: <password>
   user: <username>
+basedir: <path/to/directory>
 ```
 
 Initialize contest directory and download samples.
