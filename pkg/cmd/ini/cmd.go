@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/Ladicle/hack/pkg/config"
@@ -31,6 +32,8 @@ type Options struct {
 	ID string
 	// Lang is a name of programming language.
 	Lang string
+	// Color is a flag of coloring.
+	Color bool
 }
 
 func NewCommand(f *config.File, out io.Writer) *cobra.Command {
@@ -46,11 +49,13 @@ func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 			if err := opts.Validate(args); err != nil {
 				return err
 			}
+			opts.Complete()
 			return opts.Run(f, out)
 		},
 	}
 
 	cmd.Flags().StringVarP(&opts.Lang, "lang", "l", "", "programming Language. (e.g. go)")
+	cmd.Flags().BoolVarP(&opts.Color, "color", "C", false, "enable color output even if not in tty.")
 
 	return cmd
 }
@@ -61,6 +66,12 @@ func (o *Options) Validate(args []string) error {
 	}
 	o.ID = args[0]
 	return nil
+}
+
+func (o *Options) Complete() {
+	if o.Color {
+		color.NoColor = false
+	}
 }
 
 func (o *Options) Run(f *config.File, out io.Writer) error {
@@ -111,13 +122,14 @@ func (o Options) initAtCoder(f *config.File, out io.Writer) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(out, "%v✓ Scraping task %v\n", indentLv1, task)
+		green := color.New(color.FgGreen).SprintFunc()
+		fmt.Fprintf(out, "%v%v Scraping task %v\n", indentLv1, green("✓"), task)
 		for i, sample := range samples {
 			id := i + 1 // convert to 1-index
 			if samples == nil {
 				continue
 			}
-			fmt.Fprintf(out, "%v✓ Scraping sample #%d\n", indentLv2, id)
+			fmt.Fprintf(out, "%v%v Scraping sample #%d\n", indentLv2, green("✓"), id)
 			if err := sample.Write(taskDir, id, filePerm); err != nil && !os.IsExist(err) {
 				return err
 			}
