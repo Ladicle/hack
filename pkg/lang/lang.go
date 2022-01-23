@@ -14,7 +14,6 @@ import (
 
 	"github.com/Ladicle/hack/pkg/sample"
 	"github.com/fatih/color"
-	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const (
@@ -48,8 +47,11 @@ const (
 type Error struct {
 	ID    int
 	Type  ErrorType
-	Input string
 	Extra string
+
+	Output       []byte
+	Expect       []byte
+	SampleInFile string
 }
 
 func (e Error) Error() string {
@@ -106,9 +108,11 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 	c.Stdin = sampleInput
 
 	if err := c.Run(); err != nil {
+		// TLE
 		if err == context.DeadlineExceeded {
 			return Error{ID: sampleID, Type: TimeoutErr}
 		}
+		// RE
 		if len(errout.Bytes()) > 0 {
 			return Error{
 				ID:    sampleID,
@@ -119,39 +123,21 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 		return err
 	}
 
-	want, err := ioutil.ReadFile(sample.Name(sampleID, sample.ExtSampleOut))
+	expect, err := ioutil.ReadFile(sample.Name(sampleID, sample.ExtSampleOut))
 	if err != nil {
 		return err
 	}
-
-	dmp := diffmatchpatch.New()
-	diffs := dmp.DiffMain(out.String(), string(want), false)
-	if len(diffs) == 1 && diffs[0].Type == diffmatchpatch.DiffEqual {
+	// AC
+	if bytes.Compare(out.Bytes(), expect) == 0 {
 		return nil
 	}
-
-	input, err := ioutil.ReadFile(sampleInput.Name())
-	if err != nil {
-		return err
-	}
-
-	var buf bytes.Buffer
-	var deco = color.New(color.FgYellow).SprintlnFunc()
-	buf.WriteString(deco("Got:"))
-	buf.Write(out.Bytes())
-	buf.WriteString(deco("\nWant:"))
-	buf.Write(want)
-	if !color.NoColor {
-		buf.WriteString(deco("\nDiff:"))
-		buf.WriteString(dmp.DiffPrettyText(diffs))
-	}
-	buf.WriteString(deco("\nInput:"))
-	buf.Write(input)
-
+	// WA
 	return Error{
-		ID:    sampleID,
-		Type:  WrongAnswer,
-		Extra: buf.String(),
+		ID:           sampleID,
+		Type:         WrongAnswer,
+		Output:       out.Bytes(),
+		Expect:       expect,
+		SampleInFile: sampleInput.Name(),
 	}
 }
 

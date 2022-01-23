@@ -1,6 +1,7 @@
 package test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/fatih/color"
 	"github.com/pkg/browser"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/spf13/cobra"
 
 	"github.com/Ladicle/hack/pkg/config"
@@ -27,6 +29,11 @@ type Options struct {
 	Copy    bool
 	Open    bool
 	Color   bool
+
+	HideInput  bool
+	HideOutput bool
+	HideExpect bool
+	HideDiff   bool
 
 	workingDir string
 	programID  string
@@ -56,6 +63,11 @@ func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 	cmd.Flags().BoolVar(&opts.Copy, "copy", true, "copy program to clipboard after passing all tests.")
 	cmd.Flags().BoolVar(&opts.Open, "open", true, "open task page after passing all tests.")
 	cmd.Flags().BoolVarP(&opts.Color, "color", "C", false, "enable color output even if not in tty.")
+
+	cmd.Flags().BoolVarP(&opts.HideInput, "hide-input", "I", false, "do not print input value when the test fails.")
+	cmd.Flags().BoolVarP(&opts.HideOutput, "hide-output", "O", false, "do not print output value when the test fails.")
+	cmd.Flags().BoolVarP(&opts.HideExpect, "hide-expect", "E", false, "do not print expected value when the test fails.")
+	cmd.Flags().BoolVarP(&opts.HideDiff, "hide-diff", "D", false, "do not print diff value when the test fails.")
 
 	return cmd
 }
@@ -96,10 +108,10 @@ func (o *Options) Complete() error {
 	return nil
 }
 
-func (o *Options) Run(f *config.File, out io.Writer) error {
+func (o Options) Run(f *config.File, out io.Writer) error {
 	// Test only the specified sample
-	if o.SampleID != 0 {
-		if _, err := testProgram(o.tester, o.SampleID, out); err != nil {
+	if o.SampleID > 0 {
+		if _, err := o.testProgram(o.SampleID, out); err != nil {
 			return err
 		}
 		return nil
@@ -113,7 +125,7 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 
 	var cntErr int
 	for sampleID := 1; sampleID <= num; sampleID++ {
-		if pass, err := testProgram(o.tester, o.SampleID, out); err != nil {
+		if pass, err := o.testProgram(sampleID, out); err != nil {
 			return err
 		} else if !pass {
 			cntErr++
@@ -150,8 +162,8 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 
 // testProgram tests program with the specified sample ID, then returns pass flag of the
 // sample test case and error.
-func testProgram(tester lang.Tester, sampleID int, out io.Writer) (pass bool, err error) {
-	err = tester.Run(sampleID)
+func (o Options) testProgram(sampleID int, out io.Writer) (pass bool, err error) {
+	err = o.tester.Run(sampleID)
 	if err == nil {
 		fmt.Fprintf(out, "[%v] Sample #%d\n", color.GreenString("AC"), sampleID)
 		return true, nil
@@ -161,5 +173,41 @@ func testProgram(tester lang.Tester, sampleID int, out io.Writer) (pass bool, er
 		return false, err
 	}
 	fmt.Fprintln(out, langErr)
+
+	// Print debug information
+	var input []byte
+	if !o.HideInput {
+		data, err := ioutil.ReadFile(langErr.SampleInFile)
+		if err != nil {
+			return false, err
+		}
+		input = data
+	}
+
+	var diff string
+	if !o.HideDiff {
+		dmp := diffmatchpatch.New()
+		diff = dmp.DiffPrettyText(dmp.DiffMain(string(langErr.Output), string(langErr.Expect), false))
+	}
+
+	var buf bytes.Buffer
+	var deco = color.New(color.FgYellow).SprintlnFunc()
+	if !o.HideOutput {
+		buf.WriteString(deco("Got:"))
+		buf.Write(langErr.Output)
+	}
+	if !o.HideExpect {
+		buf.WriteString(deco("\nExpect:"))
+		buf.Write(langErr.Expect)
+	}
+	if !color.NoColor && !o.HideDiff {
+		buf.WriteString(deco("\nDiff:"))
+		buf.WriteString(diff)
+	}
+	if !o.HideInput {
+		buf.WriteString(deco("\nInput:"))
+		buf.Write(input)
+	}
+	fmt.Fprintln(out, buf.String())
 	return false, nil
 }
