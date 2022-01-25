@@ -115,9 +115,10 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 		// RE
 		if len(errout.Bytes()) > 0 {
 			return Error{
-				ID:    sampleID,
-				Type:  RuntimeErr,
-				Extra: fmt.Sprintf("%v: %s", err, errout.String()),
+				ID:   sampleID,
+				Type: RuntimeErr,
+				Extra: fmt.Sprintf("%v:\nStdout:\n%sStderr:\n%s",
+					err, out.String(), errout.String()),
 			}
 		}
 		return err
