@@ -107,10 +107,17 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 	defer sampleInput.Close()
 	c.Stdin = sampleInput
 
+	start := time.Now()
 	if err := c.Run(); err != nil {
 		// TLE
-		if err == context.DeadlineExceeded {
-			return Error{ID: sampleID, Type: TimeoutErr}
+		if err == context.DeadlineExceeded || err.Error() == "signal: killed" {
+			return Error{
+				ID:   sampleID,
+				Type: TimeoutErr,
+				Extra: fmt.Sprintf(
+					"Past %v:\nStdout:\n%s\nIf you want to change timeout, use `--timeout(-t)` flag.",
+					time.Now().Sub(start), out.String()),
+			}
 		}
 		// RE
 		if len(errout.Bytes()) > 0 {

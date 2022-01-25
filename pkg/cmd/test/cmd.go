@@ -59,7 +59,7 @@ func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().DurationVar(&opts.Timeout, "timeout", 2*time.Second, "set timeout duration.")
+	cmd.Flags().DurationVarP(&opts.Timeout, "timeout", "t", 2*time.Second, "set timeout duration.")
 	cmd.Flags().BoolVar(&opts.Copy, "copy", true, "copy program to clipboard after passing all tests.")
 	cmd.Flags().BoolVar(&opts.Open, "open", true, "open task page after passing all tests.")
 	cmd.Flags().BoolVarP(&opts.Color, "color", "C", false, "enable color output even if not in tty.")
@@ -173,6 +173,9 @@ func (o Options) testProgram(sampleID int, out io.Writer) (pass bool, err error)
 		return false, err
 	}
 	fmt.Fprintln(out, langErr)
+	if langErr.Type != lang.WrongAnswer {
+		return false, nil
+	}
 
 	// Print debug information
 	var input []byte
