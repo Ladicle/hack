@@ -26,6 +26,7 @@ type Options struct {
 	SampleID int
 
 	Timeout time.Duration
+	Submit  bool
 	Copy    bool
 	Open    bool
 	Color   bool
@@ -36,7 +37,7 @@ type Options struct {
 	HideDiff   bool
 
 	workingDir string
-	programID  string
+	program    string
 	tester     lang.Tester
 }
 
@@ -60,7 +61,8 @@ func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 	}
 
 	cmd.Flags().DurationVarP(&opts.Timeout, "timeout", "t", 2*time.Second, "set timeout duration.")
-	cmd.Flags().BoolVar(&opts.Copy, "copy", true, "copy program to clipboard after passing all tests.")
+	cmd.Flags().BoolVar(&opts.Copy, "copy", false, "copy program to clipboard after passing all tests.")
+	cmd.Flags().BoolVar(&opts.Submit, "submit", true, "submit program after passing all tests.")
 	cmd.Flags().BoolVar(&opts.Open, "open", true, "open task page after passing all tests.")
 	cmd.Flags().BoolVarP(&opts.Color, "color", "C", false, "enable color output even if not in tty.")
 
@@ -98,7 +100,7 @@ func (o *Options) Complete() error {
 	if err != nil {
 		return err
 	}
-	o.programID = prog
+	o.program = prog
 
 	tester, err := lang.GetTester(prog, o.Timeout)
 	if err != nil {
@@ -136,24 +138,42 @@ func (o Options) Run(f *config.File, out io.Writer) error {
 			color.RedString("%d", cntErr), color.GreenString("%d", num-cntErr))
 	}
 
+	var (
+		contestID = contest.GetContestID(o.workingDir)
+		taskID    = contest.GetTaskID(o.workingDir)
+
+		openURL string
+	)
+
 	if o.Copy {
-		data, err := ioutil.ReadFile(o.programID)
+		data, err := ioutil.ReadFile(o.program)
 		if err != nil {
 			return err
 		}
 		if err := clipboard.WriteAll(string(data)); err != nil {
 			return err
 		}
-		fmt.Fprintf(out, "Copy %v!\n", o.programID)
+		openURL = contest.GetTaskURL(contestID, taskID)
+		fmt.Fprintf(out, "Copy %v!\n", o.program)
+	}
+
+	if o.Submit {
+		at, err := contest.NewAtCoder(contestID)
+		if err != nil {
+			return err
+		}
+		if err := at.Login(f.AtCoder.User, f.AtCoder.Pass); err != nil {
+			return err
+		}
+		if err := at.SubmitCode(taskID, o.program); err != nil {
+			return err
+		}
+		openURL = contest.GetSubmitMeURL(contestID)
+		fmt.Fprintf(out, "Submit %v!\n", o.program)
 	}
 
 	if o.Open {
-		var (
-			contestID = contest.GetContestID(o.workingDir)
-			taskID    = contest.GetTaskID(o.workingDir)
-		)
-		taskURL := contest.GetTaskURL(contestID, taskID)
-		if err := browser.OpenURL(taskURL); err != nil {
+		if err := browser.OpenURL(openURL); err != nil {
 			return err
 		}
 	}

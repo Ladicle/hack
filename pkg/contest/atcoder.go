@@ -2,6 +2,8 @@ package contest
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -138,9 +140,66 @@ func (a AtCoder) ScrapeSamples(taskID string) ([]*sample.Set, error) {
 	return ss, nil
 }
 
+// SubmitCode submits the specified program.
+func (a *AtCoder) SubmitCode(taskID, program string) error {
+	code, err := ioutil.ReadFile(program)
+	if err != nil {
+		return err
+	}
+	ext := filepath.Ext(program)
+	langId, err := ext2LangId(ext)
+	if err != nil {
+		return err
+	}
+
+	taskURL := GetTaskURL(a.ContestID, taskID)
+	csrfToken, err := a.getCsrfToken(taskURL)
+	if err != nil {
+		return err
+	}
+
+	vals := url.Values{}
+	vals.Add("data.TaskScreenName", taskID)
+	vals.Add("data.LanguageId", langId)
+	vals.Add("sourceCode", string(code))
+	vals.Add("csrf_token", csrfToken)
+
+	submitURL := fmt.Sprintf("https://%v/contests/%v/submit", atCoderHost, a.ContestID)
+	resp, err := a.client.PostForm(submitURL, vals)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%v - %v", resp.StatusCode, resp.Status)
+	}
+	return nil
+}
+
+// ext2LangId returns the language ID from matched with the extension.
+func ext2LangId(ext string) (string, error) {
+	switch ext {
+	case ".py":
+		return "4047", nil
+	case ".go":
+		return "4026", nil
+	case ".rs":
+		return "4050", nil
+	case ".cpp":
+		return "4004", nil
+	default:
+		return "", fmt.Errorf("%q is not supported", ext)
+	}
+}
+
 // GetTaskURL returns URL of the specified task page.
 func GetTaskURL(contestID, taskID string) string {
 	return fmt.Sprintf("https://%v/contests/%v/tasks/%v", atCoderHost, contestID, taskID)
+}
+
+// GetTaskURL returns my submission URL of the specified contest ID.
+func GetSubmitMeURL(contestID string) string {
+	return fmt.Sprintf("https://%v/contests/%v/submissions/me", atCoderHost, contestID)
 }
 
 // GetContestID returns the parent directory name as the contest ID.
