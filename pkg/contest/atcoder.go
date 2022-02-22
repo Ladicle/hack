@@ -2,6 +2,7 @@ package contest
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -117,22 +118,26 @@ func (a AtCoder) ScrapeSamples(taskID string) ([]*sample.Set, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	return scrapeSample(resp.Body)
+}
 
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+func scrapeSample(body io.Reader) ([]*sample.Set, error) {
+	doc, err := goquery.NewDocumentFromReader(body)
 	if err != nil {
 		return nil, err
 	}
 	// AtCoder outputs both JP and EN content in one page.
 	var ss []*sample.Set
-	doc.Find(".lang-en pre").Each(func(i int, s *goquery.Selection) {
-		if i == 0 {
-			return
-		}
-		if i%2 == 1 {
-			ss = append(ss, &sample.Set{In: s.Text()})
-			return
-		}
-		ss[i/2-1].Out = s.Text()
+	doc.Find(".lang-en .part").Each(func(i int, s *goquery.Selection) {
+		s.Find("h3").Each(func(i int, s *goquery.Selection) {
+			header := s.Text()
+			switch {
+			case strings.HasPrefix(header, "Sample Input"):
+				ss = append(ss, &sample.Set{In: s.Next().Text()})
+			case strings.HasPrefix(header, "Sample Output"):
+				ss[len(ss)-1].Out = s.Next().Text()
+			}
+		})
 	})
 	if len(ss) == 0 {
 		return nil, fmt.Errorf("failed to scrape samples from %#+v", doc)
