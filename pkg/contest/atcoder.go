@@ -140,6 +140,18 @@ func scrapeSample(body io.Reader) ([]*sample.Set, error) {
 		})
 	})
 	if len(ss) == 0 {
+		// Support non multi-language contest
+		doc.Find("h3").Each(func(i int, s *goquery.Selection) {
+			header := s.Text()
+			switch {
+			case strings.HasPrefix(header, "入力例") || strings.HasPrefix(header, "Sample Input"):
+				ss = append(ss, &sample.Set{In: s.Next().Text()})
+			case strings.HasPrefix(header, "出力例") || strings.HasPrefix(header, "Sample Output"):
+				ss[len(ss)-1].Out = s.Next().Text()
+			}
+		})
+	}
+	if len(ss) == 0 {
 		return nil, fmt.Errorf("failed to scrape samples from %#+v", doc)
 	}
 	return ss, nil
