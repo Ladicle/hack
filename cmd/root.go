@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/Ladicle/hack/pkg/cmd/add"
 	"github.com/Ladicle/hack/pkg/cmd/goo"
 	"github.com/Ladicle/hack/pkg/cmd/ini"
 	"github.com/Ladicle/hack/pkg/cmd/open"
@@ -36,6 +37,7 @@ func Run() error {
 	cmd.AddCommand(test.NewCommand(f, out))
 	cmd.AddCommand(open.NewCommand())
 	cmd.AddCommand(goo.NewCommand(f, out))
+	cmd.AddCommand(add.NewCommand(f, out))
 
 	cobra.OnInitialize(func() {
 		config.MustUnmarshal(path, f)

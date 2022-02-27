@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -13,6 +14,8 @@ const (
 	ExtSampleOut = ".out"
 
 	SampleDir = "samples"
+
+	defaultEditor = "emacsclient"
 )
 
 type Set struct {
@@ -28,6 +31,16 @@ func (s Set) Write(dir string, id int, perm fs.FileMode) error {
 	out := filepath.Join(dir, Name(id, ExtSampleOut))
 	if err := ioutil.WriteFile(out, []byte(s.Out), perm); err != nil {
 		return err
+	}
+	return nil
+}
+
+func WriteInEditor(dir string, id int) error {
+	for _, ext := range []string{ExtSampleIn, ExtSampleOut} {
+		f := filepath.Join(dir, Name(id, ext))
+		if err := exec.Command(defaultEditor, f).Run(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
