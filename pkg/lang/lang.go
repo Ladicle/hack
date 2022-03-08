@@ -136,7 +136,7 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 		return err
 	}
 	// AC
-	if bytes.Compare(out.Bytes(), expect) == 0 {
+	if bytes.Compare(bytes.TrimSpace(out.Bytes()), bytes.TrimSpace(expect)) == 0 {
 		return nil
 	}
 	// WA
