@@ -1,6 +1,7 @@
 package open
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/Ladicle/hack/pkg/contest"
@@ -8,8 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var browse bool
+
 func NewCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:          "open",
 		Aliases:      []string{"o"},
 		Short:        "Open current task page",
@@ -22,8 +25,15 @@ func NewCommand() *cobra.Command {
 			var (
 				contestID = contest.GetContestID(wd)
 				taskID    = contest.GetTaskID(wd)
+				addr      = contest.GetTaskURL(contestID, taskID)
 			)
-			return browser.OpenURL(contest.GetTaskURL(contestID, taskID))
+			if browse {
+				return browser.OpenURL(addr)
+			}
+			fmt.Print(addr)
+			return nil
 		},
 	}
+	cmd.Flags().BoolVarP(&browse, "browse", "b", true, "Open task in browser. If false, the URL will be output.")
+	return cmd
 }
