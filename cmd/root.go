@@ -8,6 +8,7 @@ import (
 	"github.com/Ladicle/hack/pkg/cmd/add"
 	"github.com/Ladicle/hack/pkg/cmd/goo"
 	"github.com/Ladicle/hack/pkg/cmd/ini"
+	"github.com/Ladicle/hack/pkg/cmd/next"
 	"github.com/Ladicle/hack/pkg/cmd/open"
 	"github.com/Ladicle/hack/pkg/cmd/test"
 	"github.com/Ladicle/hack/pkg/config"
@@ -38,6 +39,7 @@ func Run() error {
 	cmd.AddCommand(open.NewCommand())
 	cmd.AddCommand(goo.NewCommand(f, out))
 	cmd.AddCommand(add.NewCommand(f, out))
+	cmd.AddCommand(next.NewCommand(f, out))
 
 	cobra.OnInitialize(func() {
 		config.MustUnmarshal(path, f)
