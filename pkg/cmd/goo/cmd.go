@@ -3,7 +3,9 @@ package goo
 import (
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
@@ -50,7 +52,24 @@ func (o *Options) Run(f *config.File, out io.Writer) error {
 		path = filepath.Join(path, o.contestID)
 	}
 	if o.taskID != "" {
-		path = filepath.Join(path, o.taskID)
+		if _, err := os.Stat(filepath.Join(path, o.taskID)); os.IsExist(err) {
+			path = filepath.Join(path, o.taskID)
+		} else {
+			// Complement task ID from suffix. (e.g. c -> foo_contest_c)
+			dirs, err := os.ReadDir(path)
+			if err != nil {
+				return err
+			}
+			for _, dir := range dirs {
+				if !dir.IsDir() {
+					continue
+				}
+				if strings.HasSuffix(dir.Name(), o.taskID) {
+					path = filepath.Join(path, dir.Name())
+					break
+				}
+			}
+		}
 	}
 	_, err := fmt.Fprint(out, path)
 	return err
