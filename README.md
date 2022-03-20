@@ -5,7 +5,7 @@
 ## Installation
 
 ```bash
-go get -u github.com/Ladicle/hack
+go install github.com/Ladicle/hack@latest
 ```
 
 ## Usage
@@ -17,16 +17,17 @@ Usage:
   hack [command]
 
 Available Commands:
+  add         Add resource to the contest directory
   go          Print path to the directory
   help        Help about any command
   init        Create directories and download samples
+  next        Print next quiz directory
   open        Open current task page
   test        Test your program
 
 Flags:
       --config string   path to the configuration file (default "~/.config/hack")
   -h, --help            help for hack
-  -v, --version         version for hack
 
 Use "hack [command] --help" for more information about a command.
 ```
@@ -37,8 +38,8 @@ Write configuration and save it as a `~/.config/hack` file.
 
 ```
 atcoder:
-  pass: <password>
   user: <username>
+  pass: <password>
 basedir: <path/to/directory>
 ```
 
