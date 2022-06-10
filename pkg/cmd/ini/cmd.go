@@ -13,6 +13,7 @@ import (
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
 	"github.com/Ladicle/hack/pkg/lang"
+	"github.com/Ladicle/hack/pkg/readme"
 	"github.com/Ladicle/hack/pkg/sample"
 )
 
@@ -34,6 +35,8 @@ type Options struct {
 	Lang string
 	// Color is a flag of coloring.
 	Color bool
+	// Readme is a flag of README template.
+	Readme bool
 }
 
 func NewCommand(f *config.File, out io.Writer) *cobra.Command {
@@ -56,6 +59,7 @@ func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 
 	cmd.Flags().StringVarP(&opts.Lang, "lang", "l", "", "programming Language. (e.g. go)")
 	cmd.Flags().BoolVarP(&opts.Color, "color", "C", false, "enable color output even if not in tty.")
+	cmd.Flags().BoolVar(&opts.Readme, "readme", false, "")
 
 	return cmd
 }
@@ -111,6 +115,15 @@ func (o Options) initAtCoder(f *config.File, out io.Writer) error {
 				return err
 			}
 			f.Close()
+		}
+		if o.Readme {
+			data, err := readme.GenerateReadme(o.ID, task)
+			if err != nil {
+				return err
+			}
+			if err := os.WriteFile("README.org", data, 0666); err != nil {
+				return err
+			}
 		}
 
 		// Setup sample directory
