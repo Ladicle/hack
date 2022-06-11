@@ -59,7 +59,7 @@ func NewCommand(f *config.File, out io.Writer) *cobra.Command {
 
 	cmd.Flags().StringVarP(&opts.Lang, "lang", "l", "", "programming Language. (e.g. go)")
 	cmd.Flags().BoolVarP(&opts.Color, "color", "C", false, "enable color output even if not in tty.")
-	cmd.Flags().BoolVar(&opts.Readme, "readme", false, "")
+	cmd.Flags().BoolVar(&opts.Readme, "readme", false, "generate README.org in each task directory.")
 
 	return cmd
 }
@@ -117,12 +117,15 @@ func (o Options) initAtCoder(f *config.File, out io.Writer) error {
 			f.Close()
 		}
 		if o.Readme {
-			data, err := readme.GenerateReadme(o.ID, task)
-			if err != nil {
-				return err
-			}
-			if err := os.WriteFile("README.org", data, 0666); err != nil {
-				return err
+			readmePath := filepath.Join(taskDir, "README.org")
+			if _, err := os.Stat(readmePath); err != nil && os.IsNotExist(err) {
+				data, err := readme.GenerateReadme(o.ID, task)
+				if err != nil {
+					return err
+				}
+				if err := os.WriteFile(readmePath, data, 0666); err != nil {
+					return err
+				}
 			}
 		}
 

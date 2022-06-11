@@ -1,0 +1,11 @@
+#+title: abc170 - abc170_f
+
+* 問題
+
+* 考察
+
+* 解説
+
+* 実装
+
+#+include: "./main.py" src python
