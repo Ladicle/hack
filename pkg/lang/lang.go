@@ -116,7 +116,7 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 				Type: TimeoutErr,
 				Extra: fmt.Sprintf(
 					"Past %v:\nStdout:\n%s\nIf you want to change timeout, use `--timeout(-t)` flag.",
-					time.Now().Sub(start), out.String()),
+					time.Since(start), out.String()),
 			}
 		}
 		// RE
@@ -136,7 +136,7 @@ func runProgram(ctx context.Context, sampleID int, args ...string) error {
 		return err
 	}
 	// AC
-	if bytes.Compare(bytes.TrimSpace(out.Bytes()), bytes.TrimSpace(expect)) == 0 {
+	if bytes.Equal(bytes.TrimSpace(out.Bytes()), bytes.TrimSpace(expect)) {
 		return nil
 	}
 	// WA

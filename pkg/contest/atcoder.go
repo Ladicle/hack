@@ -164,7 +164,7 @@ func (a *AtCoder) SubmitCode(taskID, program string) error {
 		return err
 	}
 	ext := filepath.Ext(program)
-	langId, err := ext2LangId(ext)
+	langID, err := ext2LangID(ext)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (a *AtCoder) SubmitCode(taskID, program string) error {
 
 	vals := url.Values{}
 	vals.Add("data.TaskScreenName", taskID)
-	vals.Add("data.LanguageId", langId)
+	vals.Add("data.LanguageId", langID)
 	vals.Add("sourceCode", string(code))
 	vals.Add("csrf_token", csrfToken)
 
@@ -193,8 +193,8 @@ func (a *AtCoder) SubmitCode(taskID, program string) error {
 	return nil
 }
 
-// ext2LangId returns the language ID from matched with the extension.
-func ext2LangId(ext string) (string, error) {
+// ext2LangID returns the language ID from matched with the extension.
+func ext2LangID(ext string) (string, error) {
 	switch ext {
 	case ".py":
 		return "4047", nil
@@ -250,7 +250,6 @@ func GetTaskDir(baseDir, contestID, taskID string) string {
 	parts := strings.SplitN(taskID, "_", 2)
 	if parts[0] == contestID {
 		return filepath.Join(baseDir, parts[1])
-	} else {
-		return filepath.Join(baseDir, taskID)
 	}
+	return filepath.Join(baseDir, taskID)
 }
