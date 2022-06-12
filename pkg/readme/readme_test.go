@@ -1,9 +1,14 @@
 package readme
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestGenerateReadme(t *testing.T) {
 	const wantData = `#+title: sample-contest1 - sample-task1
+#+setupfile: ~/doc/setup.prev.org
+#+date: [2022-06-12 Sun 21:38]
 
 * 問題
 
@@ -16,7 +21,11 @@ func TestGenerateReadme(t *testing.T) {
 #+include: "./main.py" src python
 `
 
-	gotData, err := GenerateReadme("sample-contest1", "sample-task1")
+	date, err := time.Parse(orgTimeLayout, "[2022-06-12 Sun 21:38]")
+	if err != nil {
+		t.Fatalf("fail to parse time: err=%v", err)
+	}
+	gotData, err := GenerateReadme("sample-contest1", "sample-task1", date)
 	if err != nil {
 		t.Fatalf("fail to GenerateReadme(): err=%v", err)
 	}

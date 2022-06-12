@@ -3,9 +3,14 @@ package readme
 import (
 	"bytes"
 	"text/template"
+	"time"
 )
 
-const readmeTpl = `{{define "base"}}#+title: {{ .ContestID }} - {{ .TaskID }}
+const (
+	orgTimeLayout = "[2006-01-02 Mon 15:04]"
+	readmeTpl     = `{{define "base"}}#+title: {{ .ContestID }} - {{ .TaskID }}
+#+setupfile: ~/doc/setup.prev.org
+#+date: {{ .Date }}
 
 * 問題
 
@@ -18,8 +23,9 @@ const readmeTpl = `{{define "base"}}#+title: {{ .ContestID }} - {{ .TaskID }}
 #+include: "./main.py" src python
 {{end}}
 `
+)
 
-func GenerateReadme(contestID, taskID string) ([]byte, error) {
+func GenerateReadme(contestID, taskID string, date time.Time) ([]byte, error) {
 	tpl, err := template.New("base").Parse(readmeTpl)
 	if err != nil {
 		return nil, err
@@ -29,6 +35,7 @@ func GenerateReadme(contestID, taskID string) ([]byte, error) {
 	if err = tpl.Execute(&data, map[string]string{
 		"ContestID": contestID,
 		"TaskID":    taskID,
+		"Date":      date.Format(orgTimeLayout),
 	}); err != nil {
 		return nil, err
 	}

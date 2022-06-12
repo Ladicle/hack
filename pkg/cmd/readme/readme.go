@@ -3,6 +3,7 @@ package readme
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -23,7 +24,7 @@ func NewCommand() *cobra.Command {
 				contestID = args[0]
 				taskID    = args[1]
 			)
-			data, err := readme.GenerateReadme(contestID, taskID)
+			data, err := readme.GenerateReadme(contestID, taskID, time.Now())
 			if err != nil {
 				return err
 			}

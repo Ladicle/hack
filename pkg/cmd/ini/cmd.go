@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -119,7 +120,7 @@ func (o Options) initAtCoder(f *config.File, out io.Writer) error {
 		if o.Readme {
 			readmePath := filepath.Join(taskDir, "README.org")
 			if _, err := os.Stat(readmePath); err != nil && os.IsNotExist(err) {
-				data, err := readme.GenerateReadme(o.ID, task)
+				data, err := readme.GenerateReadme(o.ID, task, time.Now())
 				if err != nil {
 					return err
 				}
