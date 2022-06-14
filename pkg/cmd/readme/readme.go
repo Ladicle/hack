@@ -7,10 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/Ladicle/hack/pkg/config"
+	"github.com/Ladicle/hack/pkg/contest"
 	"github.com/Ladicle/hack/pkg/readme"
 )
 
-func NewCommand() *cobra.Command {
+func NewCommand(f *config.File) *cobra.Command {
 	return &cobra.Command{
 		Use:          "readme <CONTEST_ID> <TASK_ID>",
 		Aliases:      []string{"r"},
@@ -20,6 +22,7 @@ func NewCommand() *cobra.Command {
 			if got, want := len(args), 2; got != want {
 				return fmt.Errorf("invalid number of arguments: got=%v, want=%v", got, want)
 			}
+
 			var (
 				contestID = args[0]
 				taskID    = args[1]
@@ -28,7 +31,12 @@ func NewCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return os.WriteFile("README.org", data, 0666)
+
+			dst, err := contest.GetDirFromID(f.BaseDir, contestID, taskID)
+			if err != nil {
+				return err
+			}
+			return os.WriteFile(dst, data, 0666)
 		},
 	}
 }

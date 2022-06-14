@@ -3,9 +3,6 @@ package goo
 import (
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/Ladicle/hack/pkg/config"
 	"github.com/Ladicle/hack/pkg/contest"
@@ -47,30 +44,10 @@ func (o *Options) Validate(args []string) error {
 }
 
 func (o *Options) Run(f *config.File, out io.Writer) error {
-	path := contest.GetAtCoderDir(f.BaseDir)
-	if o.contestID != "" {
-		path = filepath.Join(path, o.contestID)
+	path, err := contest.GetDirFromID(f.BaseDir, o.contestID, o.taskID)
+	if err != nil {
+		return err
 	}
-	if o.taskID != "" {
-		if _, err := os.Stat(filepath.Join(path, o.taskID)); os.IsExist(err) {
-			path = filepath.Join(path, o.taskID)
-		} else {
-			// Complement task ID from suffix. (e.g. c -> foo_contest_c)
-			dirs, err := os.ReadDir(path)
-			if err != nil {
-				return err
-			}
-			for _, dir := range dirs {
-				if !dir.IsDir() {
-					continue
-				}
-				if strings.HasSuffix(dir.Name(), o.taskID) {
-					path = filepath.Join(path, dir.Name())
-					break
-				}
-			}
-		}
-	}
-	_, err := fmt.Fprint(out, path)
+	_, err = fmt.Fprint(out, path)
 	return err
 }

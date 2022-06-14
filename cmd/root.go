@@ -41,7 +41,7 @@ func Run() error {
 	cmd.AddCommand(goo.NewCommand(f, out))
 	cmd.AddCommand(add.NewCommand(f, out))
 	cmd.AddCommand(next.NewCommand(f, out))
-	cmd.AddCommand(readme.NewCommand())
+	cmd.AddCommand(readme.NewCommand(f))
 
 	cobra.OnInitialize(func() {
 		config.MustUnmarshal(path, f)

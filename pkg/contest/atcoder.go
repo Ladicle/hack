@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -252,4 +253,36 @@ func GetTaskDir(baseDir, contestID, taskID string) string {
 		return filepath.Join(baseDir, parts[1])
 	}
 	return filepath.Join(baseDir, taskID)
+}
+
+// GetDirFromID returns the full path to the directory for the specified task.
+func GetDirFromID(baseDir, contestID, taskID string) (string, error) {
+	path := GetAtCoderDir(baseDir)
+
+	if contestID != "" {
+		path = filepath.Join(path, contestID)
+	}
+
+	if taskID != "" {
+		if _, err := os.Stat(filepath.Join(path, taskID)); os.IsExist(err) {
+			return filepath.Join(path, taskID), nil
+		}
+
+		// Complement task ID from suffix. (e.g. c -> foo_contest_c)
+		dirs, err := os.ReadDir(path)
+		if err != nil {
+			return "", err
+		}
+
+		for _, dir := range dirs {
+			if !dir.IsDir() {
+				continue
+			}
+			if strings.HasSuffix(dir.Name(), taskID) {
+				return filepath.Join(path, dir.Name()), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no directories contain %q as a task ID", taskID)
 }
