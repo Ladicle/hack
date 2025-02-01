@@ -49,7 +49,13 @@ func WriteInEditor(dir string, id int) error {
 func CntInputs(dir string) (int, error) {
 	entries, err := os.ReadDir(filepath.Join(dir, SampleDir))
 	if err != nil {
-		return -1, err
+		if os.IsNotExist(err) {
+			if err := os.Mkdir(filepath.Join(dir, SampleDir), 0755); err != nil {
+				return 0, err
+			}
+			return 0, nil
+		}
+		return 0, err
 	}
 	var cnt int
 	for _, entry := range entries {
